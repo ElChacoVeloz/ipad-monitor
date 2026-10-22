@@ -1,0 +1,16 @@
+[Unit]
+Description=iPad Desk Monitor (1280x720 dashboard)
+Documentation=https://github.com/ElChacoVeloz/ipad-monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/ipad-monitor
+ExecStart=/usr/bin/python3 %h/ipad-monitor/server.py --host 0.0.0.0 --port 8772
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

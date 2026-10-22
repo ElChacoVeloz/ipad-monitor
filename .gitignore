@@ -1,0 +1,14 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+
+config.json
+calendars.json
+calendars.json.respaldo-*
+screenshots/
+
+wallpapers/*
+!wallpapers/opt/
+wallpapers/opt/*
+!wallpapers/opt/*.jpg

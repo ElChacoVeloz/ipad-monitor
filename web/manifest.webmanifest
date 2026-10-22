@@ -1,0 +1,12 @@
+{
+  "name": "Desk Monitor",
+  "short_name": "Desk",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05070b",
+  "theme_color": "#05070b",
+  "icons": [
+    { "src": "/icon-180.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

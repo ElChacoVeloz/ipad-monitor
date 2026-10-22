@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" class="booting">
+<head>
+<meta charset="utf-8">
+<title>Desk Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Desk Monitor">
+<meta name="theme-color" content="#05070b">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="stylesheet" href="/style.css?v=1">
+</head>
+<body>
+  <div class="bg" id="bgA"></div>
+  <div class="bg" id="bgB"></div>
+  <div class="shade"></div>
+
+  <main class="stage" id="stage">
+    <section class="col-left">
+      <header class="clock-block">
+        <div class="clock"><span id="clockTime">--:--</span><span id="clockAmPm"></span></div>
+        <div class="date" id="dateLine">&nbsp;</div>
+      </header>
+
+      <div class="now" id="nowBlock">
+        <div class="now-top">
+          <div class="now-temp"><span id="tempNow">--</span><i>°</i></div>
+          <div class="now-icon" id="iconNow"></div>
+          <div class="now-meta">
+            <div class="meta-line" id="feelsLike">Feels like —</div>
+            <div class="meta-line strong" id="descNow">—</div>
+            <div class="meta-line dim" id="extraNow"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip hourly" id="hourly"></div>
+
+      <!-- Slot rotativo: alerta del NWS <-> Nest, 5 minutos cada uno -->
+      <div class="card slot" id="slotCard">
+        <div class="slot-view alert-view" id="alertCard">
+          <div class="alert-icon" id="alertIcon"></div>
+          <div class="alert-body">
+            <div class="alert-title" id="alertTitle"></div>
+            <div class="alert-text" id="alertText"></div>
+            <div class="alert-side" id="alertSide"></div>
+          </div>
+        </div>
+
+        <div class="slot-view nest-view" id="nestCard">
+          <div class="nest-head">
+            <span class="cal-label">Nest · Thermostat</span>
+            <span class="nest-status" id="nestStatus"></span>
+          </div>
+          <div class="nest-body">
+            <div class="nest-cell">
+              <div class="nest-k">Inside</div>
+              <div class="nest-temp"><span id="nestAmbient">--</span><i>°</i></div>
+            </div>
+            <div class="nest-rule"></div>
+            <div class="nest-cell">
+              <div class="nest-k">Set to</div>
+              <div class="nest-target-value" id="nestTarget">—</div>
+            </div>
+            <div class="nest-meta">
+              <div><span class="dim">Humidity</span><span id="nestHumidity">—</span></div>
+              <div><span class="dim">Mode</span><span id="nestMode">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="slot-dots" id="slotDots"><i class="on"></i><i></i></div>
+      </div>
+
+
+</section>
+
+    <section class="col-right">
+      <div class="card calendar" id="calendarCard">
+        <div class="cal-head">
+          <span class="cal-label">Calendar</span>
+          <span class="cal-range" id="calRange"></span>
+        </div>
+        <div class="cal-body" id="calBody"></div>
+      </div>
+
+    </section>
+  </main>
+
+<script src="/app.js?v=1"></script>
+</body>
+</html>

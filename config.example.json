@@ -1,0 +1,34 @@
+{
+  "name": "iPad Desk Monitor",
+  "location": {
+    "label": "Home · Austin, TX",
+    "lat": 30.2672,
+    "lon": -97.7431,
+    "timezone": "America/Chicago",
+    "units": "celsius"
+  },
+  "display": {
+    "calendarDays": 7,
+    "hourlyCount": 4,
+    "dailyCount": 5
+  },
+  "wallpapers": {
+    "dir": "wallpapers/opt",
+    "urlBase": "/wallpapers/",
+    "rotateMinutes": 10
+  },
+  "calendar": {
+    "configFile": "~/ipad-monitor/calendars.json"
+  },
+  "nest": {
+    "enabled": false,
+    "mode": "sdm",
+    "projectId": "",
+    "deviceId": "",
+    "refreshTokenFile": "~/.hermes/nest_token.json"
+  },
+  "alerts": {
+    "enabled": true,
+    "userAgent": "ipad-monitor/1.0 (desk display)"
+  }
+}
