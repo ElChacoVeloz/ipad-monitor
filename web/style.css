@@ -246,6 +246,8 @@ html, body {
 .now {
   padding-left: 2px;
   flex: 0 0 auto;
+  /* el clima se pega un poco mas al forecast de horas y deja mas aire bajo el reloj */
+  margin-top: 30px;
 }
 .now-top {
   display: flex;
