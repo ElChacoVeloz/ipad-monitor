@@ -1,8 +1,8 @@
 # iPad Desk Monitor
 
-Tablero de escritorio de **1280×720 (16:9)** pensado para quedarse prendido en un
-iPad junto al escritorio. Lo sirve una máquina Linux de la casa (Python estándar,
-sin dependencias) y el iPad solo abre una URL.
+Tablero de escritorio con **tema LCARS** (Star Trek), pensado para quedarse prendido
+en un iPad junto al escritorio. Lo sirve una máquina Linux de la casa (Python
+estándar, sin dependencias) y el iPad solo abre una URL.
 
 ![Pantalla con el aviso del NWS](docs/demo-alert.png)
 
@@ -13,21 +13,30 @@ sin dependencias) y el iPad solo abre una URL.
 
 ## Qué trae
 
+- **Marco LCARS**: codos, barras segmentadas y encabezados tipo píldora sobre negro,
+  con fuente Antonio. Paleta: pizarra `#535970`, `#8d93ad`, rojo-naranja `#ee4a2a`,
+  salmón `#ff8a66`, durazno `#ffb98e` y cian `#2ca9df`.
 - **Reloj grande + fecha** del día, en la zona horaria configurada.
 - **Avisos oficiales del NWS** (api.weather.gov) en una tarjeta que **rota cada 5
   minutos con el termostato Nest**, sincronizada al reloj. Sin alerta activa, la
-  tarjeta se queda en el Nest y esconde los puntos de paginación.
+  tarjeta se queda en el Nest y esconde los puntos de paginación. Con alerta, la
+  píldora pasa a `RED ALERT` en rojo y el icono parpadea.
 - **Clima ahora**: temperatura en °C, icono, sensación térmica, descripción,
   humedad y viento (Open-Meteo, sin API key).
+- **Barra lateral**: amanecer, atardecer, máxima/mínima, humedad, viento y lluvia
+  del día.
 - **Próximas 4 horas** con icono, probabilidad de lluvia y temperatura.
 - **Calendario vertical** a toda la altura de la columna, leyendo los **feeds
-  iCal privados** de cada calendario (sin OAuth): días completos, barra y
-  etiqueta con el color de su calendario, y un separador fino entre días.
+  iCal privados** de cada calendario (sin OAuth). La hora va en una píldora con
+  el color de su calendario. **Los eventos que ya terminaron salen de la pila**
+  (el encabezado del día dice `N DONE`), el que está en curso queda arriba con
+  `· NOW`, y el espacio que se libera lo ocupa el **avance del día siguiente**.
 - **Termostato Nest** por Google Device Access (SDM): ambiente, set point,
   humedad, modo y estado.
-- **Fondos que rotan** cada 10 minutos con crossfade y un velo oscuro para que el
-  texto se lea sobre cualquier imagen.
-- Paleta oscura única, tipografía Inter, cero librerías de frontend.
+- **Pie de estado**: una píldora por fuente (`WX`, `CAL`, `NEST`, `NWS`) que pasa a
+  ámbar si el dato está viejo y a rojo si la fuente se cae.
+- Cero librerías de frontend. (El diseño anterior, con fondos rotativos y Inter,
+  vive en el historial de git; el servidor todavía publica la lista de fondos.)
 
 ## Arranque rápido
 
@@ -49,9 +58,10 @@ Para depurar el JSON: `python3 server.py --once`.
   esa tarjeta muestra el motivo en una línea y el resto sigue funcionando.
 - `web/` — `index.html`, `style.css`, `app.js` sin librerías. El escenario mide
   **1280 de ancho fijo** y el alto se adapta al de la pantalla (800–1020 px de
-  diseño) para que en un iPad 4:3 no queden franjas muertas; la tipografía escala
-  con ese alto en `calc(Npx * var(--fs))` y `ensureFit()` la baja si algo no
-  cabe, antes que recortar.
+  diseño) para que en un iPad 4:3 no queden franjas muertas. En pantallas bajas
+  (16:9) `ensureFit()` compacta la columna izquierda y quita horas del pronóstico
+  antes de repartir el calendario. El margen del área segura del iPad es
+  `max(base, env(safe-area-inset-*))`, no la suma: sumarlos costaba un día entero.
 - `ics_lib.py` — parser iCal con expansión de `RRULE`/`EXDATE`, `webcal://` →
   `https://` y normalización de cada ocurrencia.
 - `office-calendars.py` — alta de calendarios por **dirección secreta iCal**,
@@ -59,11 +69,14 @@ Para depurar el JSON: `python3 server.py --once`.
 
 ### El calendario no aprieta: elige
 
-Se piden los días que diga `display.calendarDays`, pero solo se pintan los que
-caben **completos** y con aire. Si no cabe uno, se va entero y el encabezado lo
-dice (`Oct 22 – Oct 25 · +3 days (26, 27, 28)`). Nunca se corta un evento de un
-día que sí se muestra; solo si **un** día solo no cupiera se recortan sus
-últimos eventos con un `+N` en su encabezado.
+Se piden los días que diga `display.calendarDays`. Los eventos con hora que ya
+terminaron se quitan (los de todo el día se quedan hasta que cambia el día) y se
+pintan los días que caben **completos**. Después, el primer día que no cupo entra
+como **avance** con los eventos que quepan, una etiqueta `+N MORE` y el último
+renglón atenuado; si no cabe ni su encabezado con un evento, no se pinta. Lo que
+queda fuera se anuncia en el encabezado
+(`Oct 27 – Oct 29 · +4 days (30, 31, 1, 2) · +4 hidden`). Se recalcula en cada
+refresco (60 s), así que la lista avanza sola durante el día.
 
 ## Configuración
 
@@ -74,7 +87,6 @@ día que sí se muestra; solo si **un** día solo no cupiera se recortan sus
 | `location` | etiqueta, lat/lon, `timezone`, unidades (`celsius`) |
 | `display.calendarDays` | ventana que se le pide al calendario (7 = semana) |
 | `display.hourlyCount` / `dailyCount` | horas y días de pronóstico |
-| `wallpapers.dir` / `rotateMinutes` | carpeta de fondos y rotación (10 min) |
 | `calendar.configFile` | ruta del `calendars.json` (0600, con las direcciones secretas) |
 | `nest` | `projectId`, `deviceId` y archivo del refresh token (SDM) |
 | `alerts` | User-Agent que exige api.weather.gov |
@@ -129,14 +141,18 @@ loginctl enable-linger "$USER"     # arranca al encender, sin iniciar sesión
 
 La página pide **Screen Wake Lock** mientras está visible (iOS 16.4+), se recarga
 sola cuando cambia el código del servidor y se auto-recarga si lleva 5 minutos sin
-poder hablar con él. Para revisar una tarjeta concreta sin esperar la rotación:
-`?slot=alert` o `?slot=nest`; para fijar un fondo, `?wp=2`.
+poder hablar con él. Parámetros para probar sin esperar:
+
+| Parámetro | Para qué |
+|---|---|
+| `?slot=alert` / `?slot=nest` | fija una vista del slot rotativo |
+| `?now=2026-10-27T13:30` | simula la hora del calendario (eventos pasados, en curso, avance) |
+| `?inset=24,20` | simula el área segura del iPad en modo app (arriba, abajo) |
+| `?debug=1` | pinta en el encabezado las métricas del reparto del calendario |
 
 ## Lo que **no** está en este repo
 
 - `config.json` y `calendars.json` (coordenadas e **direcciones iCal secretas**).
-- Los fondos de pantalla originales que usa el dueño: aquí van tres degradados
-  de ejemplo en `wallpapers/opt/`.
 - Capturas reales: las de `docs/` se generaron con `--mock`.
 
 Para rearmarlo: `cp config.example.json config.json`, pon tus coordenadas y
@@ -144,5 +160,6 @@ corre `office-calendars.py add`.
 
 ## Licencia
 
-MIT — ver [LICENSE](LICENSE). La tipografía **Inter** se incluye bajo SIL Open
-Font License 1.1 (`web/fonts/OFL.txt`).
+MIT — ver [LICENSE](LICENSE). La tipografía **Antonio** se incluye bajo SIL Open
+Font License 1.1 (`web/fonts/OFL-Antonio.txt`). LCARS es un diseño de la franquicia
+Star Trek; esto es un homenaje de aficionado sin fines comerciales.

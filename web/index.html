@@ -2,95 +2,149 @@
 <html lang="en" class="booting">
 <head>
 <meta charset="utf-8">
-<title>Desk Monitor</title>
+<title>Desk Monitor · LCARS</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Desk Monitor">
-<meta name="theme-color" content="#05070b">
+<meta name="theme-color" content="#000000">
 <meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-180.png">
-<link rel="stylesheet" href="/style.css?v=1">
+<link rel="stylesheet" href="/style.css?v=lcars7">
 </head>
 <body>
-  <div class="bg" id="bgA"></div>
-  <div class="bg" id="bgB"></div>
-  <div class="shade"></div>
+<main class="stage" id="stage">
 
-  <main class="stage" id="stage">
-    <section class="col-left">
-      <header class="clock-block">
-        <div class="clock"><span id="clockTime">--:--</span><span id="clockAmPm"></span></div>
-        <div class="date" id="dateLine">&nbsp;</div>
-      </header>
-
-      <div class="now" id="nowBlock">
-        <div class="now-top">
-          <div class="now-temp"><span id="tempNow">--</span><i>°</i></div>
+  <!-- ===================================================== marco superior -->
+  <header class="top">
+    <div class="elbow e-top">
+      <span class="ecode">DESK · 8772</span>
+      <span class="ecode2" id="stardate">SD —</span>
+    </div>
+    <div class="top-body">
+      <div class="top-content">
+        <div class="clock-block">
+          <div class="clock"><span id="clockTime">--:--</span><span class="ampm" id="clockAmPm"></span></div>
+          <div class="date" id="dateLine">&nbsp;</div>
+        </div>
+        <div class="now" id="nowBlock">
           <div class="now-icon" id="iconNow"></div>
+          <div class="now-temp"><span id="tempNow">--</span><i>°C</i></div>
           <div class="now-meta">
-            <div class="meta-line" id="feelsLike">Feels like —</div>
-            <div class="meta-line strong" id="descNow">—</div>
-            <div class="meta-line dim" id="extraNow"></div>
+            <div class="m strong" id="descNow">—</div>
+            <div class="m" id="feelsLike">Feels like —</div>
+            <div class="m dim" id="hiLo"></div>
           </div>
         </div>
       </div>
-
-      <div class="strip hourly" id="hourly"></div>
-
-      <!-- Slot rotativo: alerta del NWS <-> Nest, 5 minutos cada uno -->
-      <div class="card slot" id="slotCard">
-        <div class="slot-view alert-view" id="alertCard">
-          <div class="alert-icon" id="alertIcon"></div>
-          <div class="alert-body">
-            <div class="alert-title" id="alertTitle"></div>
-            <div class="alert-text" id="alertText"></div>
-            <div class="alert-side" id="alertSide"></div>
-          </div>
-        </div>
-
-        <div class="slot-view nest-view" id="nestCard">
-          <div class="nest-head">
-            <span class="cal-label">Nest · Thermostat</span>
-            <span class="nest-status" id="nestStatus"></span>
-          </div>
-          <div class="nest-body">
-            <div class="nest-cell">
-              <div class="nest-k">Inside</div>
-              <div class="nest-temp"><span id="nestAmbient">--</span><i>°</i></div>
-            </div>
-            <div class="nest-rule"></div>
-            <div class="nest-cell">
-              <div class="nest-k">Set to</div>
-              <div class="nest-target-value" id="nestTarget">—</div>
-            </div>
-            <div class="nest-meta">
-              <div><span class="dim">Humidity</span><span id="nestHumidity">—</span></div>
-              <div><span class="dim">Mode</span><span id="nestMode">—</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="slot-dots" id="slotDots"><i class="on"></i><i></i></div>
+      <div class="bar">
+        <i class="seg s-lav" style="width:120px"></i>
+        <i class="seg s-org" style="width:46px"></i>
+        <i class="seg s-gry fill"></i>
+        <i class="seg s-pch" style="width:90px"></i>
+        <i class="seg s-lav" style="width:30px"></i>
+        <i class="seg s-gry cap" style="width:40px"></i>
       </div>
+    </div>
+  </header>
 
-
-</section>
-
-    <section class="col-right">
-      <div class="card calendar" id="calendarCard">
-        <div class="cal-head">
-          <span class="cal-label">Calendar</span>
-          <span class="cal-range" id="calRange"></span>
-        </div>
-        <div class="cal-body" id="calBody"></div>
+  <!-- ============================================================= cuerpo -->
+  <section class="body">
+    <div class="row-top">
+      <div class="elbow e-mid"></div>
+      <div class="bar">
+        <i class="seg s-gry" style="width:180px"></i>
+        <i class="seg s-sal" style="width:34px"></i>
+        <i class="seg s-lav fill"></i>
+        <i class="seg s-cyn" style="width:64px"></i>
+        <i class="seg s-lav cap" style="width:40px"></i>
       </div>
+    </div>
 
-    </section>
-  </main>
+    <div class="row-mid">
+      <nav class="side" id="side"></nav>
 
-<script src="/app.js?v=1"></script>
+      <div class="main">
+        <!-- columna de clima por hora + slot -->
+        <div class="col-left">
+          <div class="pill-head">
+            <span class="ph-cap s-pch"></span><span class="ph-name s-pch">NEXT HOURS</span>
+            <span class="ph-fill"></span><span class="ph-end s-pch"></span>
+          </div>
+          <div class="hourly" id="hourly"></div>
+
+          <div class="slot" id="slotCard">
+            <div class="slot-view alert-view" id="alertCard">
+              <div class="pill-head">
+                <span class="ph-cap a-col"></span><span class="ph-name a-col" id="alertHead">NWS · ALERTS</span>
+                <span class="ph-fill"></span><span class="ph-end a-col"></span>
+              </div>
+              <div class="alert-body">
+                <div class="alert-icon" id="alertIcon"></div>
+                <div>
+                  <div class="alert-title" id="alertTitle"></div>
+                  <div class="alert-text" id="alertText"></div>
+                  <div class="alert-side" id="alertSide"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="slot-view nest-view" id="nestCard">
+              <div class="pill-head">
+                <span class="ph-cap s-lav"></span><span class="ph-name s-lav">NEST · THERMOSTAT</span>
+                <span class="ph-fill"></span><span class="ph-badge" id="nestStatus">—</span><span class="ph-end s-lav"></span>
+              </div>
+              <div class="nest-body">
+                <div class="nest-cell">
+                  <div class="nk">INSIDE</div>
+                  <div class="nv"><span id="nestAmbient">--</span><i>°</i></div>
+                </div>
+                <div class="nest-cell">
+                  <div class="nk">SET TO</div>
+                  <div class="nv set" id="nestTarget">—</div>
+                </div>
+                <div class="nest-meta">
+                  <div><span class="nk">HUMIDITY</span><b id="nestHumidity">—</b></div>
+                  <div><span class="nk">MODE</span><b id="nestMode">—</b></div>
+                </div>
+              </div>
+            </div>
+            <div class="slot-dots" id="slotDots"><i class="on"></i><i></i></div>
+          </div>
+        </div>
+
+        <!-- calendario -->
+        <div class="calendar" id="calendarCard">
+          <div class="pill-head big">
+            <span class="ph-cap s-cyn"></span><span class="ph-name s-cyn">CALENDAR</span>
+            <span class="ph-fill"></span><span class="ph-range" id="calRange"></span><span class="ph-end s-cyn"></span>
+          </div>
+          <div class="cal-body" id="calBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row-bot">
+      <div class="elbow e-bot"><span class="ecode" id="botCode">REF —</span></div>
+      <div class="bot-body">
+        <div class="bot-content">
+          <div class="loc" id="locLabel">HOME · HOUSTON, TX</div>
+          <div class="sources" id="sources"></div>
+        </div>
+        <div class="bar">
+          <i class="seg s-pch" style="width:110px"></i>
+          <i class="seg s-gry fill"></i>
+          <i class="seg s-org" style="width:40px"></i>
+          <i class="seg s-lav" style="width:150px"></i>
+          <i class="seg s-gry cap" style="width:40px"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="/app.js?v=lcars7"></script>
 </body>
 </html>

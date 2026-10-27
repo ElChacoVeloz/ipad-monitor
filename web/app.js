@@ -1,4 +1,4 @@
-/* Desk Monitor — pinta el tablero de 1280x720 para el iPad.
+/* Desk Monitor (tema LCARS) — pinta el tablero de 1280x720 para el iPad.
    Sin librerias. Un fetch por minuto a /api/data, reloj cada segundo,
    fondos que rotan cada N minutos con crossfade y wake lock para que la
    pantalla no se duerma. */
@@ -116,7 +116,10 @@ function tickClock() {
   const m = String(now.getMinutes()).padStart(2, "0");
   $("#clockTime").textContent = `${h}:${m}`;
   $("#clockAmPm").textContent = h24 < 12 ? "AM" : "PM";
-  $("#dateLine").textContent = fmt({ weekday: "long", month: "long", day: "numeric" }, now);
+  $("#dateLine").textContent = fmt({ weekday: "long", month: "long", day: "numeric", year: "numeric" }, now);
+  const jan1 = new Date(now.getFullYear(), 0, 1);
+  const doy = Math.floor((now - jan1) / 86400000) + 1;
+  $("#stardate").textContent = `DAY ${String(doy).padStart(3, "0")} · ${now.getFullYear()}`;
 }
 
 /* --------------------------------------------------------------- alertas */
@@ -135,10 +138,12 @@ function renderAlerts(alerts) {
       $("#alertText").textContent = "NWS Houston/Galveston · emergencies show up here";
     }
     $("#alertSide").innerHTML = "";
+    $("#alertHead").textContent = "NWS · ALERTS";
     return;
   }
 
   const worst = alerts.items[0];
+  $("#alertHead").textContent = alerts.count > 1 ? `RED ALERT · ${alerts.count}` : "RED ALERT";
   $("#alertIcon").innerHTML = alertIcon("alert");
   $("#alertTitle").textContent = worst.event || "Weather alert";
   // el titular del NWS empieza repitiendo el nombre del aviso: se quita
@@ -163,52 +168,101 @@ function renderAlerts(alerts) {
 
 /* ----------------------------------------------------------------- clima */
 
+function hhmm(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return fmt({ hour: "numeric", minute: "2-digit" }, d);
+}
+
+function sideBlocks(wx) {
+  const side = $("#side");
+  const cur = (wx && wx.current) || {};
+  const today = (wx && wx.daily && wx.daily[0]) || {};
+  const r = (v, u) => (v == null ? "—" : `${Math.round(v)}${u || ""}`);
+  const blocks = [
+    ["s-org", "sunrise", hhmm(wx && ((wx.sun || {}).sunrise || today.sunrise))],
+    ["s-pch", "sunset", hhmm(wx && ((wx.sun || {}).sunset || today.sunset))],
+    ["s-lav", "high / low", `${r(today.maxC, "°")} / ${r(today.minC, "°")}`],
+    ["s-gry", "humidity", r(cur.humidity, "%")],
+    ["s-lav", "wind km/h", r(cur.windKph)],
+    ["s-sal", "rain today", r(today.rainPct, "%")],
+    ["s-gry grow", "", ""],
+  ];
+  side.innerHTML = blocks.map(([c, k, v]) =>
+    `<div class="blk ${c}">${k ? `<span class="k">${escapeHtml(k)}</span>` : ""}${
+      v ? `<span class="v">${escapeHtml(v)}</span>` : ""}</div>`).join("");
+  const gry = side.querySelector(".blk.s-gry:not(.grow)");
+  if (gry) gry.style.color = "#c4c8d8";
+}
+
 function renderWeather(wx) {
   const src = state.data && state.data.sources ? state.data.sources.weather : null;
+  sideBlocks(wx);
   if (!wx) {
     $("#tempNow").textContent = "--";
     $("#iconNow").innerHTML = "";
     $("#feelsLike").textContent = "Weather unavailable";
     $("#descNow").textContent = (src && src.error) || "no data from Open-Meteo";
-    $("#extraNow").textContent = "";
+    $("#hiLo").textContent = "";
     $("#hourly").innerHTML = "";
     return;
   }
-
   const cur = wx.current || {};
   $("#tempNow").textContent = Math.round(cur.tempC);
   $("#iconNow").innerHTML = icon(cur.icon, cur.isDay);
-  $("#feelsLike").textContent = `Feels like ${Math.round(cur.feelsC)}`;
+  $("#feelsLike").textContent = `Feels like ${Math.round(cur.feelsC)}°`;
   $("#descNow").textContent = cur.desc || "";
   const bits = [];
-  if (cur.humidity != null) bits.push(`${Math.round(cur.humidity)}% humidity`);
-  if (cur.windKph != null) bits.push(`${Math.round(cur.windKph)} km/h wind`);
-  $("#extraNow").textContent = bits.join(" · ");
+  if (cur.humidity != null) bits.push(`${Math.round(cur.humidity)}% hum`);
+  if (cur.windKph != null) bits.push(`${Math.round(cur.windKph)} km/h`);
+  $("#hiLo").textContent = bits.join(" · ");
 
   const hourly = wx.hourly || [];
   $("#hourly").innerHTML = hourly.map((h) => `
-    <div class="cell">
-      <div class="hour">${escapeHtml(h.label)}</div>
+    <div class="hr">
+      <div class="h">${escapeHtml(h.label)}</div>
       <div class="ico">${icon(h.icon, h.isDay)}</div>
-      <div class="rain">${h.rainPct != null ? `${icon("drop")}${h.rainPct}%` : ""}</div>
-      <div class="temp">${Math.round(h.tempC)}°</div>
+      <div class="rain">${h.rainPct != null ? `${h.rainPct}%` : ""}</div>
+      <div class="t">${Math.round(h.tempC)}<i>°</i></div>
     </div>`).join("");
-
 }
 
 /* ------------------------------------------------------------ calendario */
 
+/* Hora "de ahora" para el calendario. ?now=2026-10-27T13:00 la fija (QA). */
+function calNow() {
+  const q = new URLSearchParams(location.search).get("now");
+  const t = q ? new Date(q).getTime() : NaN;
+  return Number.isNaN(t) ? Date.now() : t;
+}
+
+/* Un evento con hora ya terminado sale de la pila; los de todo el dia se
+   quedan hasta que cambie el dia. Sin hora de fin, cuenta el inicio + 1 h. */
+function eventEnded(ev, now) {
+  if (ev.allDay) return false;
+  const end = new Date(ev.end || "").getTime();
+  if (!Number.isNaN(end)) return end <= now;
+  const start = new Date(ev.start || "").getTime();
+  return !Number.isNaN(start) && start + 3600000 <= now;
+}
+
+function eventLive(ev, now) {
+  if (ev.allDay) return false;
+  const a = new Date(ev.start || "").getTime();
+  const b = new Date(ev.end || "").getTime();
+  return !Number.isNaN(a) && !Number.isNaN(b) && a <= now && now < b;
+}
+
 function eventRow(ev) {
-  const color = tintSolid(ev.color);
   const row = document.createElement("div");
-  row.className = "event";
+  row.className = "event" + (eventLive(ev, calNow()) ? " live" : "");
   let when = "All day";
   if (!ev.allDay && ev.start) {
     const d = new Date(ev.start);
     if (!Number.isNaN(d.getTime())) when = fmt({ hour: "numeric", minute: "2-digit" }, d);
   }
-  row.innerHTML = `<div class="bar" style="--ev:${color};background:${color}"></div>
-    <div class="when">${escapeHtml(when)}</div>
+  row.innerHTML = `<div class="when" style="background:${tagColor(ev.color)}">${escapeHtml(when)}</div>
     <div class="what">${escapeHtml(ev.title)}</div>
     <div class="cal-tag" style="color:${tagColor(ev.color)}">${escapeHtml(ev.calendar || "")}</div>`;
   return row;
@@ -232,7 +286,11 @@ function renderCalendar(cal) {
     return;
   }
 
-  const days = cal.days || [];
+  const now = calNow();
+  const days = (cal.days || []).map((d) => {
+    const events = (d.events || []).filter((ev) => !eventEnded(ev, now));
+    return Object.assign({}, d, { events, done: (d.events || []).length - events.length });
+  });
 
   /* Nada de scroll ni recorte silencioso. Con muchos calendarios (los 5 de la
      oficina) el dia se llena: primero se aprieta la densidad, luego se cortan
@@ -257,8 +315,21 @@ function renderCalendar(cal) {
       dEl.innerHTML = `<div class="day-head">
           <div class="day-num">${Number(String(day.date).slice(8, 10))}</div>
           <div class="day-name">${escapeHtml(day.date === todayIso ? "Today" : day.weekday || "")}</div>
+          <div class="day-rule"></div>
         </div>`;
+      if (day.done > 0) {
+        const chip = document.createElement("span");
+        chip.className = "day-done";
+        chip.textContent = `${day.done} done`;
+        dEl.querySelector(".day-head").insertBefore(chip, dEl.querySelector(".day-rule"));
+      }
       for (const ev of day.events || []) dEl.appendChild(eventRow(ev));
+      if (!(day.events || []).length && day.done > 0) {
+        const none = document.createElement("div");
+        none.className = "day-clear";
+        none.textContent = "Nothing else today";
+        dEl.appendChild(none);
+      }
       body.appendChild(dEl);
     }
   };
@@ -277,11 +348,40 @@ function renderCalendar(cal) {
     return null;
   };
   let gapUsed = fitGap();
+  const dropped = [];
   while (gapUsed === null && body.children.length > 1) {
-    body.removeChild(body.lastElementChild);
+    dropped.unshift(body.removeChild(body.lastElementChild));
     gapUsed = fitGap();
   }
   if (gapUsed === null) body.style.gap = `${MIN_GAP}px`;
+
+  /* Avance del dia siguiente: en vez de dejar el hueco, el primer dia que no
+     cupo entra con los eventos que quepan y un "+N" en su encabezado. Si no
+     cabe ni el encabezado con un evento, no se pinta. */
+  const markHidden = (dEl) => {
+    dEl.classList.add("cut");
+    const day = days.find((d) => d.date === dEl.dataset.date) || { events: [] };
+    const painted = dEl.querySelectorAll(".event").length;
+    let count = dEl.querySelector(".day-count");
+    if (!count) {
+      count = document.createElement("span");
+      count.className = "day-count";
+      dEl.querySelector(".day-head").insertBefore(count, dEl.querySelector(".day-rule"));
+    }
+    count.textContent = `+${Math.max(0, day.events.length - painted)} more`;
+  };
+  if (dropped.length) {
+    const nextDay = dropped[0];
+    nextDay.classList.add("partial");
+    body.appendChild(nextDay);
+    let rowsLeft = nextDay.querySelectorAll(".event");
+    while (!fits() && rowsLeft.length > 1) {
+      nextDay.removeChild(rowsLeft[rowsLeft.length - 1]);
+      rowsLeft = nextDay.querySelectorAll(".event");
+      markHidden(nextDay);
+    }
+    if (!fits() || !rowsLeft.length) body.removeChild(nextDay);
+  }
 
   while (!fits() && body.children.length === 1) {
     const only = body.lastElementChild;
@@ -294,9 +394,9 @@ function renderCalendar(cal) {
     if (!count) {
       count = document.createElement("span");
       count.className = "day-count";
-      only.querySelector(".day-head").appendChild(count);
+      only.querySelector(".day-head").insertBefore(count, only.querySelector(".day-rule"));
     }
-    count.textContent = `+${Math.max(0, day.events.length - painted)}`;
+    count.textContent = `+${Math.max(0, day.events.length - painted)} more`;
   }
   if (!body.children.length) {
     body.innerHTML = `<div class="cal-empty">No room for the calendar</div>`;
@@ -374,7 +474,7 @@ function renderNest(nest) {
     $("#nestMode").textContent = "—";
     const st = $("#nestStatus");
     st.textContent = "offline";
-    st.className = "nest-status idle";
+    st.className = "ph-badge";
     $("#nestCard").classList.add("err-state");
     return;
   }
@@ -388,7 +488,7 @@ function renderNest(nest) {
   const label = statusMap[nest.status] || (nest.status || "").toLowerCase() || "—";
   const name = nest.name && nest.name.toLowerCase() !== "nest" ? ` · ${nest.name}` : "";
   st.textContent = label + name;
-  st.className = "nest-status" + (label === "idle" ? " idle" : "");
+  st.className = "ph-badge" + (label === "idle" ? "" : " on");
 }
 
 /* --------------------------------------------------------- slot rotativo */
@@ -433,15 +533,29 @@ function applySlot() {
 
 /* ------------------------------------------------------------- render all */
 
+function renderFooter(d) {
+  if (d.locationLabel) $("#locLabel").textContent = d.locationLabel;
+  $("#botCode").textContent = `REF ${String(d.version || "").slice(0, 8)}`;
+  const names = { weather: "WX", calendar: "CAL", nest: "NEST", alerts: "NWS" };
+  const s = d.sources || {};
+  $("#sources").innerHTML = Object.keys(names).filter((k) => s[k]).map((k) => {
+    const x = s[k];
+    const cls = !x.ok ? "bad" : x.stale ? "stale" : "";
+    const txt = !x.ok ? "OFFLINE" : x.stale ? "STALE" : "OK";
+    return `<div class="src ${cls}"><b>${names[k]}</b><span>${txt}</span></div>`;
+  }).join("");
+}
+
 function render() {
   const d = state.data;
   if (!d) return;
+  renderFooter(d);
   renderAlerts(d.alerts);
   renderWeather(d.weather);
-  renderCalendar(d.calendar);
   renderNest(d.nest);
   applySlot();
-  ensureFit();       // ultimo recurso: baja la letra
+  ensureFit();       // la columna izquierda primero: puede cambiar el alto
+  renderCalendar(d.calendar);
 }
 
 /* --------------------------------------------------------------- fondos */
@@ -513,7 +627,6 @@ async function fetchData() {
     state.version = data.version;
     state.data = data;
     render();
-    if (data.wallpapers) applyWallpapers(data.wallpapers);
   } catch (err) {
     state.fails += 1;
     if (!state.data) {
@@ -539,45 +652,36 @@ async function fetchData() {
    sube con el alto para que quepa mas y se lea mejor. En 16:9 queda 1280x720
    como estaba. */
 function fitStage() {
+  const sim = new URLSearchParams(location.search).get("inset"); // QA: ?inset=24,20
+  if (sim) {
+    const [t, b] = sim.split(",").map((x) => parseFloat(x) || 0);
+    document.documentElement.style.setProperty("--sat", `${t}px`);
+    document.documentElement.style.setProperty("--sab", `${b}px`);
+  }
   const iw = window.innerWidth;
   const ih = window.innerHeight;
-  const stageH = Math.min(1020, Math.max(800, 1280 * (ih / iw)));
-  // La letra sube con el alto disponible: en 16:9 (800) queda igual, en 4:3
-  // (960, el iPad) crece ~21%. ensureFit() la baja si aun asi no cabe.
-  // Un punto mas grande que antes (el Capitan lo pidio dos veces): en 4:3 ~1.30
-  const fs = Math.min(1.34, Math.max(0.90, ((stageH - 40) / 700) * 0.99));
-  document.documentElement.style.setProperty("--stage-h", `${Math.round(stageH)}px`);
-  document.documentElement.style.setProperty("--fs", fs.toFixed(3));
-  const scale = Math.min(iw / 1280, ih / stageH);
+  const stageH = Math.round(Math.min(1020, Math.max(800, 1280 * (ih / iw))));
+  document.documentElement.style.setProperty("--stage-h", `${stageH}px`);
+  const s = Math.min(iw / 1280, ih / stageH);
   $("#stage").style.transform =
-    `translate(-50%, -50%) scale(${Math.min(Math.max(scale, 0.2), 3)})`;
-  ensureFit();
+    `translate(${((iw - 1280 * s) / 2).toFixed(2)}px, ${((ih - stageH * s) / 2).toFixed(2)}px) scale(${s.toFixed(4)})`;
+  if (state.data) render();
 }
-
-/* Red de seguridad: si la columna izquierda no cabe (pantalla mas baja de lo
-   previsto), se baja la tipografia de 2 en 2% hasta que entre. Se mide el
-   ultimo hijo y no scrollHeight, porque el velo ::before con inset negativo
-   infla el scrollHeight del contenedor. */
-function leftColumnOverflows() {
-  const col = document.querySelector(".col-left");
-  if (!col || !col.children.length) return false;
-  const last = col.children[col.children.length - 1];
-  return last.getBoundingClientRect().bottom > col.getBoundingClientRect().bottom + 1;
-}
-
+/* Pantallas mas bajas que el iPad (16:9): primero se compacta la columna
+   izquierda y, si aun no cabe, se quitan horas del pronostico por el final. */
 function ensureFit() {
   const col = document.querySelector(".col-left");
-  const root = document.documentElement;
-  if (!col || !col.children.length) return;
-  let fs = parseFloat(getComputedStyle(root).getPropertyValue("--fs")) || 1;
-  let guard = 0;
-  const overflows = leftColumnOverflows;
-  // el piso es 0.85: en pantallas 16:9 mas bajas la letra cede antes que recortar
-  while (overflows() && fs > 0.85 && guard < 14) {
-    fs = Math.max(0.85, fs - 0.02);
-    root.style.setProperty("--fs", fs.toFixed(3));
-    guard += 1;
-  }
+  const stage = $("#stage");
+  if (!col) return;
+  const over = () => {
+    const last = col.lastElementChild;
+    return last && last.getBoundingClientRect().bottom > col.getBoundingClientRect().bottom + 1;
+  };
+  stage.classList.remove("compact");
+  if (!over()) return;
+  stage.classList.add("compact");
+  const rows = () => col.querySelectorAll(".hr");
+  while (over() && rows().length > 2) rows()[rows().length - 1].remove();
 }
 
 /* -------------------------------------------------------------- wake lock */

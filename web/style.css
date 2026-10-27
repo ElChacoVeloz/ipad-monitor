@@ -1,556 +1,217 @@
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 200 600;
-  font-display: swap;
-  src: url("/fonts/inter-latin.woff2") format("woff2");
+/* Desk Monitor — tema LCARS (propuesta). Lienzo 1280 de ancho, alto adaptativo
+   (800 en 16:9, ~960 en el iPad 4:3). Sin `inset`, `dvh`, `:has()`, `color-mix()`. */
+@font-face{
+  font-family:"Antonio";
+  src:url("/fonts/Antonio.ttf") format("truetype");
+  font-weight:100 700;font-display:block;
+}
+:root{
+  --gry:#535970; --lav:#8d93ad; --lt:#c4c8d8;
+  --org:#ee4a2a; --sal:#ff8a66; --pch:#ffb98e; --cyn:#2ca9df; --amb:#ffa21f;
+  --ink:#ffd9bf; --muted:#a9aec4; --dim:#6f7590; --track:#14171f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden}
+body{
+  font-family:"Antonio","Oswald","Arial Narrow",sans-serif;color:var(--ink);
+  text-transform:uppercase;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;user-select:none;touch-action:none;
+}
+html.booting *,html.booting *::before,html.booting *::after{transition:none !important}
+
+.stage{
+  position:absolute;top:0;left:0;width:1280px;height:var(--stage-h,960px);
+  padding:22px 18px 14px;display:flex;flex-direction:column;transform-origin:0 0;
+}
+/* iPad en modo app: la barra de estado y el indicador de inicio ya dan el
+   margen; se toma el MAYOR (no la suma) para no perder ~50 px de calendario.
+   El x1.2 compensa la escala del lienzo (~0.84 en el iPad) para que el marco
+   no se meta debajo de la hora del sistema. ?inset=T,B lo simula. */
+@supports (padding: max(1px, calc(2px * 1.2))) {
+  .stage{
+    padding-top:max(16px, calc(var(--sat, env(safe-area-inset-top, 0px)) * 1.2));
+    padding-bottom:max(10px, calc(var(--sab, env(safe-area-inset-bottom, 0px)) * 1.2));
+  }
 }
 
-:root {
-  --ink: #eef3f8;
-  --ink-2: rgba(238, 243, 248, 0.79);
-  --ink-3: rgba(238, 243, 248, 0.55);
-  --line: rgba(255, 255, 255, 0.11);
-  --line-soft: rgba(255, 255, 255, 0.07);
-  --card: rgba(9, 13, 19, 0.46);
-  --card-strong: rgba(7, 10, 15, 0.62);
-  --alert-bg: rgba(168, 26, 36, 0.46);
-  --alert-line: rgba(255, 104, 104, 0.48);
-  --ok: #4ec98a;
-  --bottom-h: 112px;
-}
+/* ------------------------------------------------------------ piezas */
+.s-gry{background:var(--gry)} .s-lav{background:var(--lav)} .s-lt{background:var(--lt)}
+.s-org{background:var(--org)} .s-sal{background:var(--sal)} .s-pch{background:var(--pch)}
+.s-cyn{background:var(--cyn)}
+.bar{display:flex;height:18px;flex:none}
+.bar .seg{display:block;height:100%;margin-left:5px;flex:none}
+.bar .seg:first-child{margin-left:0}
+.bar .seg.fill{flex:1}
+.bar .cap{border-radius:0 9px 9px 0}
 
-* { box-sizing: border-box; }
+.elbow{position:relative;flex:none;width:250px}
+.elbow::after{content:"";position:absolute;background:#000}
+.ecode,.ecode2{position:absolute;left:14px;font-size:16px;font-weight:500;color:#000;letter-spacing:.05em;z-index:1}
 
-/* Al arrancar no se anima nada: sin esto el slot (alerta/Nest) y los fondos
-   aparecen a medio fade en el primer pintado. */
-html.booting *, html.booting *::before, html.booting *::after {
-  transition: none !important;
-}
+/* ------------------------------------------------------------ arriba */
+.top{display:flex;height:168px;flex:none}
+.e-top{height:168px;background:var(--lav);border-bottom-left-radius:86px}
+.e-top::after{left:160px;top:0;right:0;bottom:18px;border-bottom-left-radius:38px}
+.e-top .ecode{top:10px}
+.e-top .ecode2{top:32px;opacity:.75}
+.top-body{flex:1;display:flex;flex-direction:column;margin-left:5px;min-width:0}
+.top-content{flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px 12px 18px}
+.clock{font-size:118px;font-weight:300;line-height:.86;color:var(--pch);letter-spacing:.01em;white-space:nowrap}
+.clock .ampm{font-size:38px;font-weight:500;color:var(--sal);margin-left:10px;letter-spacing:.04em}
+.date{margin-top:8px;font-size:25px;color:var(--lt);letter-spacing:.07em}
 
-html, body {
-  margin: 0;
-  height: 100%;
-  overflow: hidden;
-  background: #05070b;
-  color: var(--ink);
-  font-family: "Inter", -apple-system, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
-  font-weight: 300;
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  user-select: none;
-  touch-action: none;
-}
+.now{display:flex;align-items:center;align-self:center}
+.now-icon{width:78px;height:78px;color:var(--pch);margin-right:12px}
+.now-icon svg{width:100%;height:100%}
+.now-temp{font-size:104px;font-weight:300;line-height:.84;color:var(--cyn)}
+.now-temp i{font-style:normal;font-size:34px;color:var(--muted);margin-left:4px;vertical-align:top;position:relative;top:6px}
+.now-meta{margin-left:18px;padding-bottom:2px;min-width:170px}
+.now-meta .m{font-size:21px;color:var(--lt);letter-spacing:.05em;line-height:1.25;white-space:nowrap}
+.now-meta .strong{font-size:27px;color:var(--ink);font-weight:500}
+.now-meta .dim{color:var(--muted)}
 
-/* ---------------------------------------------------------------- fondo */
-.bg {
-  position: fixed;
-  inset: 0;
-  background-position: center center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: opacity 1.8s ease;
-  will-change: opacity;
-  transform: translateZ(0);
-}
-.bg.on { opacity: 1; }
+/* ------------------------------------------------------------ cuerpo */
+.body{flex:1;display:flex;flex-direction:column;margin-top:6px;min-height:0}
+.row-top{display:flex;height:52px;flex:none}
+.e-mid{height:52px;background:var(--gry);border-top-left-radius:52px}
+.e-mid::after{left:160px;top:18px;right:0;bottom:0;border-top-left-radius:32px}
+.row-top .bar{flex:1;margin-left:5px}
 
-.shade {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 90% at 8% 0%, rgba(0, 0, 0, 0.20), rgba(0, 0, 0, 0.62) 78%),
-    linear-gradient(180deg, rgba(4, 6, 10, 0.52) 0%, rgba(4, 6, 10, 0.34) 42%, rgba(4, 6, 10, 0.60) 100%);
+.row-mid{flex:1;display:flex;min-height:0;margin-top:5px}
+.side{width:160px;flex:none;display:flex;flex-direction:column}
+.side .blk{
+  flex:1;min-height:0;margin-bottom:5px;color:#000;padding:0 12px 5px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;text-align:right;line-height:1;
 }
+.side .blk:last-child{margin-bottom:0}
+.side .blk .k{font-size:15px;font-weight:500;letter-spacing:.06em;opacity:.8}
+.side .blk .v{font-size:31px;font-weight:600;margin-top:2px;white-space:nowrap}
+.side .blk.grow{flex:1.6}
 
-/* --------------------------------------------------------------- escena */
-.stage {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  width: 1280px;
-  /* La altura se adapta a la pantalla (el iPad es 4:3, no 16:9): el alto lo
-     pone fitStage() entre 720 y 1000 y el ancho queda en 1280. */
-  height: var(--stage-h, 720px);
-  /* 52 arriba: el iPad en modo app muestra su barra de estado y el reloj se
-     pegaba al borde. Abajo se queda en 30. */
-  padding: 66px 32px 28px;
-  display: grid;
-  grid-template-columns: 548px 1fr;
-  gap: 22px;
-  transform: translate(-50%, -50%) scale(1);
-  transform-origin: center center;
-}
+.main{flex:1;display:flex;margin-left:20px;min-width:0;padding-top:4px}
 
-.col-left {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 11px;
-  /* el reloj no va pegado al borde superior: la columna arranca mas abajo */
-  padding-top: 54px;
-  min-height: 0;
-}
-/* El fondo es una lamina de LCARS con letras y diagramas: detras de la
-   columna de texto va un degradado suave para que se lea de lejos, sin
-   dibujar un rectangulo visible. */
-.col-left::before {
-  content: "";
-  position: absolute;
-  inset: -26px -30px -26px -36px;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(74% 64% at 28% 46%,
-      rgba(4, 7, 11, 0.74) 0%, rgba(4, 7, 11, 0.44) 54%, rgba(4, 7, 11, 0) 80%);
-}
+/* encabezado tipo píldora */
+.pill-head{display:flex;height:40px;flex:none}
+.pill-head > *{margin-left:5px;display:flex;align-items:center;color:#000}
+.pill-head > *:first-child{margin-left:0}
+.ph-cap{width:24px;border-radius:20px 0 0 20px}
+.ph-name{padding:0 12px 0 4px;font-size:24px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.ph-fill{flex:1;background:var(--gry);min-width:6px}
+.ph-end{width:18px;border-radius:0 20px 20px 0}
+.ph-badge{background:var(--gry);color:var(--lt) !important;padding:0 10px;font-size:18px;letter-spacing:.06em;white-space:nowrap}
+.ph-badge.on{background:var(--cyn);color:#000 !important}
+.ph-range{background:var(--gry);color:var(--lt) !important;padding:0 12px;font-size:18px;letter-spacing:.05em;white-space:nowrap}
+.ph-range.warn{background:var(--amb);color:#000 !important}
+.pill-head.big{height:44px}
+.pill-head.big .ph-cap{border-radius:22px 0 0 22px}
+.pill-head.big .ph-end{border-radius:0 22px 22px 0}
+.pill-head.big .ph-name{font-size:27px}
 
-.col-right {
-  display: block;
-  min-height: 0;
+/* ---------------------------------------------- columna izquierda */
+.col-left{width:340px;flex:none;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.hourly{display:flex;flex-direction:column;margin:10px 0 0 10px;border-left:5px solid var(--gry);padding-left:14px}
+.hr{display:flex;align-items:center;height:62px;margin-bottom:8px}
+.hr:last-child{margin-bottom:0}
+.hr .h{
+  width:78px;height:38px;flex:none;background:var(--lav);color:#000;font-size:21px;font-weight:600;
+  display:flex;align-items:center;justify-content:flex-end;padding-right:9px;border-radius:19px 0 0 19px;
 }
-.col-right .calendar { height: 100%; }
+.hr .ico{width:44px;height:44px;margin-left:14px;color:var(--pch);flex:none}
+.hr .ico svg{width:100%;height:100%}
+.hr .rain{margin-left:10px;font-size:19px;color:var(--cyn);width:58px;letter-spacing:.03em}
+.hr .t{margin-left:auto;font-size:52px;font-weight:300;color:var(--ink);line-height:1}
+.hr .t i{font-style:normal;font-size:22px;color:var(--muted);vertical-align:top}
 
-/* ---------------------------------------------------------------- reloj */
-.clock-block { padding-left: 2px; }
-.clock {
-  display: flex;
-  align-items: flex-start;
-  font-size: calc(100px * var(--fs, 1));
-  font-weight: 200;
-  line-height: 0.9;
-  letter-spacing: -0.045em;
-  color: #f7fafd;
-  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.55);
-}
-.clock #clockAmPm {
-  font-size: calc(26px * var(--fs, 1));
-  font-weight: 300;
-  letter-spacing: 0.02em;
-  margin-left: 11px;
-  margin-top: 8px;
-  color: var(--ink-2);
-}
-.date {
-  margin-top: 9px;
-  font-size: calc(24px * var(--fs, 1));
-  font-weight: 300;
-  letter-spacing: 0.005em;
-  color: var(--ink-2);
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
-}
+.slot{position:relative;height:236px;flex:none;margin-top:14px}
+.slot-view{position:absolute;top:0;left:0;right:0;bottom:0;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column}
+.slot-view.on{opacity:1}
+.a-col{background:var(--lav)}
+.slot.alert-on .a-col{background:var(--org)}
+.alert-body{flex:1;display:flex;align-items:flex-start;margin:12px 0 0 10px;border-left:5px solid var(--gry);padding:4px 0 0 14px}
+.alert-icon{width:52px;height:52px;flex:none;margin-right:14px;color:var(--cyn)}
+.slot.alert-on .alert-icon{color:var(--org);animation:blink 1.4s steps(2,start) infinite}
+.alert-icon svg{width:100%;height:100%}
+.alert-title{font-size:30px;font-weight:500;color:var(--ink);line-height:1.05}
+.slot.alert-on .alert-title{color:var(--org)}
+.alert-text{margin-top:8px;font-size:19px;color:var(--muted);line-height:1.25;text-transform:none;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.alert-side{margin-top:8px;font-size:17px;color:var(--amb);letter-spacing:.05em}
+@keyframes blink{to{opacity:.3}}
 
-/* --------------------------------------------------------------- alerta */
-/* Slot rotativo: alerta <-> Nest, 5 minutos cada uno (sincronizado al reloj).
-   Las dos vistas viven superpuestas y se cruzan con un fade. */
-/* .card fija min-height:0 y viene despues en el archivo: por eso .card.slot */
-.card.slot {
-  position: relative;
-  overflow: hidden;
-  padding: 0;
-  min-height: calc(150px * var(--fs, 1));
-  transition: background 0.8s ease, border-color 0.8s ease;
-}
-.slot.alert-on {
-  background: var(--alert-bg);
-  border-color: var(--alert-line);
-}
-.slot .slot-view {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 17px 22px;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-  pointer-events: none;
-}
-.slot .slot-view.on { opacity: 1; }
-.slot .nest-view {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 6px;
-}
-.slot-dots {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 9px;
-  display: flex;
-  gap: 6px;
-}
-.slot-dots i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.40);
-  transition: background 0.4s ease;
-}
-.slot-dots i.on { background: rgba(255, 255, 255, 0.85); }
-.slot-dots.hide { display: none; }
-.slot.clear-state {
-  background: rgba(12, 20, 16, 0.42);
-  border-color: rgba(78, 201, 138, 0.26);
-}
-.alert-icon {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  margin-top: 1px;
-  width: 30px;
-  height: 30px;
-  color: #ffd7d7;
-  opacity: 0.95;
-}
-.slot.clear-state .alert-icon { color: var(--ok); }
-.alert-icon svg { width: 30px; height: 30px; display: block; }
-.alert-body { flex: 1 1 auto; min-width: 0; }
-.alert-title {
-  font-size: calc(18.5px * var(--fs, 1));
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #fff;
-  margin-bottom: 7px;
-}
-.slot.clear-state .alert-title { color: #d7f5e5; }
-.alert-text {
-  font-size: calc(15px * var(--fs, 1));
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.82);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.slot.clear-state .alert-text { color: var(--ink-3); }
-.alert-side {
-  margin-top: 9px;
-  font-size: calc(13.5px * var(--fs, 1));
-  line-height: 1.3;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.82);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.nest-body{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;margin:12px 0 0 10px;border-left:5px solid var(--gry);padding:2px 0 0 14px}
+.nest-cell{width:50%}
+.nk{font-size:17px;color:var(--lav);letter-spacing:.1em}
+.nv{font-size:82px;font-weight:300;line-height:.95;color:var(--pch)}
+.nv i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:top}
+.nv.set{color:var(--cyn)}
+.nest-meta{width:100%;display:flex;margin-top:10px}
+.nest-meta > div{display:flex;align-items:center;margin-right:16px}
+.nest-meta .nk{background:var(--gry);color:var(--lt);padding:2px 8px;margin-right:8px;font-size:15px}
+.nest-meta b{font-size:22px;font-weight:500;color:var(--ink)}
+.slot-dots{position:absolute;right:4px;bottom:2px;display:flex}
+.slot-dots i{width:22px;height:8px;background:var(--gry);margin-left:5px}
+.slot-dots i.on{background:var(--pch)}
+.slot-dots.hide{display:none}
 
-/* ---------------------------------------------------------------- clima */
-/* El bloque del clima se queda con el alto sobrante: en pantallas 4:3 (iPad)
-   la temperatura respira en el centro en vez de dejar un hueco abajo. */
-.now {
-  padding-left: 2px;
-  flex: 0 0 auto;
-  /* el clima se pega un poco mas al forecast de horas y deja mas aire bajo el reloj */
-  margin-top: 30px;
+/* ---------------------------------------------------- calendario */
+.calendar{flex:1;min-width:0;display:flex;flex-direction:column;margin-left:22px}
+.cal-body{
+  flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  margin:10px 0 0 10px;border-left:5px solid var(--gry);padding:2px 4px 0 16px;
 }
-.now-top {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.now-temp {
-  display: flex;
-  align-items: flex-start;
-  font-size: calc(74px * var(--fs, 1));
-  font-weight: 200;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
-}
-.now-temp i {
-  font-style: normal;
-  font-size: calc(30px * var(--fs, 1));
-  font-weight: 300;
-  margin-top: 2px;
-  color: var(--ink-2);
-}
-.now-icon { color: #fff; opacity: 0.95; }
-.now-icon svg { width: 62px; height: 62px; display: block; }
-.now-meta { flex: 1 1 auto; padding-top: 2px; }
-.meta-line {
-  font-size: calc(17px * var(--fs, 1));
-  line-height: 1.5;
-  color: rgba(238, 243, 248, 0.86);
-  text-shadow: 0 1px 7px rgba(0, 0, 0, 0.8);
-}
-.meta-line.strong { color: var(--ink); font-weight: 400; font-size: calc(17px * var(--fs, 1)); }
-.meta-line.dim { color: rgba(238, 243, 248, 0.52); font-size: calc(14.5px * var(--fs, 1)); }
+.day{flex:none}
+.day-head{display:flex;align-items:center;height:42px;margin-bottom:10px}
+.day-num{font-size:38px;font-weight:300;line-height:1;color:var(--pch);min-width:54px}
+.day-name{font-size:22px;color:var(--lt);letter-spacing:.08em;margin-left:10px}
+.day.today .day-num{color:var(--cyn)}
+.day.today .day-name{background:var(--cyn);color:#000;padding:2px 10px 1px;font-weight:600}
+.day-rule{flex:1;height:5px;background:var(--gry);margin:0 0 0 14px}
+.day-count{margin-left:10px;background:var(--amb);color:#000;padding:1px 8px;font-size:17px}
 
-/* --------------------------------------------------------------- tiras */
-.strip {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+.event{display:flex;align-items:center;padding:var(--row-pad,0px) 0}
+.event .when{
+  width:100px;height:28px;flex:none;color:#000;font-size:18px;font-weight:600;letter-spacing:.03em;
+  display:flex;align-items:center;justify-content:flex-end;padding-right:10px;border-radius:14px 0 0 14px;
 }
-.hourly {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  margin-top: 4px;
+.event .what{
+  flex:1;min-width:0;margin-left:14px;font-size:23px;color:var(--ink);letter-spacing:.03em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:33px;
 }
-.hourly .cell {
-  padding: 19px 6px 17px;
-  text-align: center;
-  border-left: 1px solid var(--line-soft);
-}
-.hourly .cell:first-child { border-left: none; }
-.hourly .hour {
-  font-size: calc(14.5px * var(--fs, 1));
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: var(--ink-2);
-  text-transform: lowercase;
-}
-.hourly .ico { margin: 11px 0 8px; color: #fff; opacity: 0.92; }
-.hourly .ico svg { width: 40px; height: 40px; display: block; margin: 0 auto; }
-.hourly .rain {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: calc(15px * var(--fs, 1));
-  color: rgba(238, 243, 248, 0.70);
-  min-height: 16px;
-}
-.hourly .rain svg { width: 11px; height: 13px; opacity: 0.85; }
-.hourly .temp {
-  font-size: calc(25px * var(--fs, 1));
-  font-weight: 300;
-  letter-spacing: -0.01em;
-  margin-top: 5px;
-}
+.event .cal-tag{flex:none;margin-left:12px;font-size:16px;letter-spacing:.08em;white-space:nowrap;max-width:150px;overflow:hidden}
+.cal-empty{font-size:26px;color:var(--muted);padding:20px 0}
 
-.daily {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-}
-.daily .cell {
-  padding: 16px 4px 17px;
-  text-align: center;
-  border-left: 1px solid var(--line-soft);
-}
-.daily .cell:first-child { border-left: none; }
-.daily .dow {
-  font-size: calc(16.5px * var(--fs, 1));
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  color: var(--ink-2);
-}
-.daily .cell.today .dow { color: #fff; }
-.daily .ico { margin: 11px 0 10px; color: #fff; opacity: 0.9; }
-.daily .ico svg { width: 40px; height: 40px; display: block; margin: 0 auto; }
-.daily .hi-lo {
-  font-size: calc(19.5px * var(--fs, 1));
-  letter-spacing: 0.01em;
-  color: var(--ink);
-}
-.daily .hi-lo span { color: rgba(238, 243, 248, 0.55); margin-left: 7px; font-size: calc(16px * var(--fs, 1)); }
+/* ------------------------------------------------------------ abajo */
+.row-bot{display:flex;height:84px;flex:none;margin-top:5px}
+.e-bot{height:84px;background:var(--lav);border-bottom-left-radius:70px}
+.e-bot::after{left:160px;top:0;right:0;bottom:18px;border-bottom-left-radius:34px}
+.e-bot .ecode{top:8px}
+.bot-body{flex:1;display:flex;flex-direction:column;margin-left:5px;min-width:0}
+.bot-content{flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px 18px}
+.loc{font-size:21px;color:var(--lt);letter-spacing:.08em}
+.sources{display:flex}
+.src{display:flex;align-items:center;margin-left:8px;height:30px}
+.src b{height:100%;display:flex;align-items:center;padding:0 10px;font-size:16px;font-weight:600;color:#000;background:var(--cyn);letter-spacing:.05em}
+.src.stale b{background:var(--amb)}
+.src.bad b{background:var(--org)}
+.src span{height:100%;display:flex;align-items:center;padding:0 8px;font-size:15px;color:var(--lt);background:var(--gry);margin-left:3px}
 
-/* ------------------------------------------------------------ tarjetas */
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.30);
-  min-height: 0;
-}
+/* ---------------------------------------------- pantallas bajas (16:9) */
+.compact .top{height:140px} .compact .e-top{height:140px;border-bottom-left-radius:70px}
+.compact .clock{font-size:96px} .compact .now-temp{font-size:86px}
+.compact .hr{height:46px;margin-bottom:4px}
+.compact .hr .t{font-size:40px}
+.compact .slot{height:196px;margin-top:8px}
+.compact .nv{font-size:64px}
+.compact .alert-title{font-size:25px}
 
-.calendar {
-  display: flex;
-  flex-direction: column;
-  padding: 14px 22px 8px;
-  overflow: hidden;
-}
-.cal-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-bottom: 10px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid var(--line-soft);
-}
-.cal-label {
-  font-size: calc(12px * var(--fs, 1));
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(238, 243, 248, 0.68);
-}
-.cal-range { font-size: calc(13.5px * var(--fs, 1)); color: var(--ink-3); letter-spacing: 0.03em; }
-.cal-range.warn { color: #ffc36b; }
-.cal-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-  padding-top: 6px;
-  display: flex;
-  flex-direction: column;
-  /* flex-start y no space-between: el aire sobrante se va a los renglones
-     (--row-extra), no a un hueco entre dos dias. */
-  justify-content: flex-start;
-  gap: 18px;
-}
+/* eventos: los terminados salen de la pila; el que esta en curso se marca */
+.day-done{margin-left:10px;background:var(--gry);color:var(--lt);padding:1px 8px;font-size:16px;letter-spacing:.06em}
+.day-clear{font-size:21px;color:var(--muted);letter-spacing:.06em;padding:4px 0 2px 114px}
+.event.live .when{animation:liveblink 2s steps(2,start) infinite}
+.event.live .what{color:#fff}
+.event.live .what::after{content:"  · NOW";color:var(--cyn);font-size:18px;letter-spacing:.08em}
+@keyframes liveblink{to{opacity:.45}}
 
-.day { display: flex; flex-direction: column; }
-.day + .day {
-  border-top: 1px solid var(--line-soft);
-  padding-top: 12px;
-}
-.day-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  /* aire entre "22 Today" y el primer renglon de eventos */
-  padding-bottom: 8px;
-}
-.day-count {
-  margin-left: auto;
-  font-size: calc(13px * var(--fs, 1));
-  letter-spacing: 0.04em;
-  color: rgba(238, 243, 248, 0.68);
-}
-.day-num {
-  font-size: calc(30px * var(--fs, 1));
-  font-weight: 200;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  color: #f4f8fc;
-  min-width: 32px;
-}
-.day-name {
-  font-size: calc(16.5px * var(--fs, 1));
-  font-weight: 300;
-  letter-spacing: 0.02em;
-  color: var(--ink-2);
-}
-.day.today .day-name { color: #fff; font-weight: 400; }
-
-.event {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 31px;
-  /* --row-pad lo calcula el JS cuando sobran dias: en vez de un hueco gigante
-     entre dos dias, los renglones respiran. */
-  padding: calc(3px + var(--row-pad, 0px)) 0;
-}
-.event .bar { align-self: stretch; }
-.event .bar {
-  flex: 0 0 4px;
-  border-radius: 3px;
-  background: var(--ev, #4f7cf7);
-}
-.event .when {
-  flex: 0 0 84px;
-  font-size: calc(14.5px * var(--fs, 1));
-  font-variant-numeric: tabular-nums;
-  line-height: 1.55;
-  color: rgba(238, 243, 248, 0.80);
-  white-space: nowrap;
-}
-.event .what {
-  flex: 1 1 auto;
-  font-size: calc(19px * var(--fs, 1));
-  font-weight: 300;
-  line-height: 1.3;
-  color: #f2f7fc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.event .cal-tag {
-  flex: 0 0 auto;
-  font-size: calc(12px * var(--fs, 1));
-  padding-left: 10px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ev, #4f7cf7);
-  opacity: 0.95;
-  align-self: center;
-  max-width: 112px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.day-more, .cal-more {
-  font-size: calc(13px * var(--fs, 1));
-  color: var(--ink-3);
-  padding-left: 80px;
-}
-.cal-more { padding-left: 0; margin-top: 4px; }
-.cal-empty { font-size: calc(14.5px * var(--fs, 1)); color: var(--ink-3); padding: 4px 0 2px 80px; }
-
-/* ---------------------------------------------------------------- Nest */
-.nest-view { min-height: 0; }
-.nest-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.nest-status {
-  font-size: calc(12.5px * var(--fs, 1));
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ok);
-}
-.nest-status.idle { color: rgba(238, 243, 248, 0.62); }
-.nest-status.idle { color: var(--ink-3); }
-.nest-body {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-.nest-temp {
-  display: flex;
-  align-items: flex-start;
-  font-size: calc(50px * var(--fs, 1));
-  font-weight: 200;
-  line-height: 1;
-  letter-spacing: -0.035em;
-}
-.nest-temp i {
-  font-style: normal;
-  font-size: calc(23px * var(--fs, 1));
-  margin-top: 2px;
-  color: var(--ink-2);
-}
-.nest-cell { min-width: 78px; }
-.nest-k {
-  font-size: calc(12.5px * var(--fs, 1));
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(238, 243, 248, 0.70);
-  margin-bottom: 3px;
-}
-.nest-rule {
-  width: 1px;
-  align-self: stretch;
-  background: var(--line);
-  margin: 2px 2px;
-}
-.nest-target-value { font-size: calc(30px * var(--fs, 1)); font-weight: 300; letter-spacing: -0.015em; }
-.nest-meta {
-  margin-left: auto;
-  display: flex;
-  gap: 20px;
-  font-size: calc(16.5px * var(--fs, 1));
-  color: var(--ink);
-  text-align: right;
-}
-.nest-meta .dim { color: rgba(238, 243, 248, 0.66); font-size: calc(12.5px * var(--fs, 1)); letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 2px; }
-
-/* --------------------------------------------------------------- avisos */
-.err { color: #ffb4b4; }
-.placeholder { color: var(--ink-3); }
+/* dia que entra a medias (avance de manana) */
+.day.cut .event:last-of-type{opacity:.55}
