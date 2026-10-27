@@ -135,7 +135,7 @@ function renderAlerts(alerts) {
       $("#alertText").textContent = (src && src.error) || "no answer from api.weather.gov";
     } else {
       $("#alertTitle").textContent = "No active alerts";
-      $("#alertText").textContent = "NWS Houston/Galveston · emergencies show up here";
+      $("#alertText").textContent = "National Weather Service · emergencies show up here";
     }
     $("#alertSide").innerHTML = "";
     $("#alertHead").textContent = "NWS · ALERTS";
@@ -635,7 +635,7 @@ async function fetchData() {
       $("#slotCard").classList.add("clear-state");
       $("#slotDots").classList.add("hide");
       $("#alertIcon").innerHTML = alertIcon("alert");
-      $("#alertTitle").textContent = "Waiting for TheGrid2…";
+      $("#alertTitle").textContent = "Waiting for the server…";
       $("#alertText").textContent = String(err && err.message ? err.message : err);
       $("#alertSide").innerHTML = "";
       $("#descNow").textContent = "no data yet";
