@@ -247,6 +247,8 @@ function renderCalendar(cal) {
      unico dia no quepa se cortan sus ultimos eventos y se cuentan ("+N"). */
   body.classList.remove("dense");
   const buildAll = () => {
+    // el relleno extra del render anterior no debe contaminar la medicion
+    body.style.setProperty("--row-pad", "0px");
     body.innerHTML = "";
     for (const day of days) {
       const dEl = document.createElement("div");
@@ -263,9 +265,23 @@ function renderCalendar(cal) {
 
   buildAll();
 
-  while (!fits() && body.children.length > 1) {
+  /* Antes de sacrificar un dia entero se aprieta el hueco entre dias (18 -> 10).
+     Con dias cargados, un pixel de mas costaba un dia completo. */
+  const MAX_GAP = 18;
+  const MIN_GAP = 10;
+  const fitGap = () => {
+    for (let g = MAX_GAP; g >= MIN_GAP; g -= 2) {
+      body.style.gap = `${g}px`;
+      if (fits()) return g;
+    }
+    return null;
+  };
+  let gapUsed = fitGap();
+  while (gapUsed === null && body.children.length > 1) {
     body.removeChild(body.lastElementChild);
+    gapUsed = fitGap();
   }
+  if (gapUsed === null) body.style.gap = `${MIN_GAP}px`;
 
   while (!fits() && body.children.length === 1) {
     const only = body.lastElementChild;
@@ -287,7 +303,27 @@ function renderCalendar(cal) {
     return;
   }
 
-  const dbgTrace = { ch: body.clientHeight, sh: body.scrollHeight,
+  /* Si sobran dias (pocos dias muy cargados), el aire se reparte entre los
+     renglones en vez de dejar un hueco enorme entre un dia y el siguiente. */
+  body.style.setProperty("--row-pad", "0px");
+  /* scrollHeight no sirve aqui: con space-between el contenido corto devuelve el
+     alto del contenedor y el hueco real se pierde. Se mide hijo por hijo. */
+  const kids = [...body.children];
+  const gapPx = parseFloat(getComputedStyle(body).gap) || 0;
+  const contentH = kids.reduce((acc, el) => acc + el.offsetHeight, 0) +
+                   Math.max(0, kids.length - 1) * gapPx;
+  const slack = body.clientHeight - contentH;
+  const rows = body.querySelectorAll(".event").length;
+  // el relleno va arriba y abajo de cada renglon: gana 2 x rowPad por fila,
+  // con tope bajo para no volver la lista un globo
+  let rowPad = 0;
+  if (slack > 40 && rows) {
+    rowPad = Math.min(9, Math.floor((slack - 16) / (rows * 2)));
+    if (rowPad > 0) body.style.setProperty("--row-pad", `${rowPad}px`);
+  }
+
+  const dbgTrace = { ch: body.clientHeight, contentH: Math.round(contentH),
+                     slack: Math.round(slack), rows, rowPad,
                      daysShown: body.children.length };
 
   body.dataset.trace = JSON.stringify(dbgTrace);
@@ -320,6 +356,11 @@ function renderCalendar(cal) {
   }
   if (hiddenEvents > 0) head.push(`+${hiddenEvents} hidden`);
   range.textContent = head.join(" · ");
+  // ?debug=1 pinta las metricas del reparto (para revisar en la pared)
+  if (new URLSearchParams(location.search).get("debug") === "1") {
+    range.textContent += ` · [ch${dbgTrace.ch} c${dbgTrace.contentH} s${dbgTrace.slack}` +
+      ` g${parseFloat(getComputedStyle(body).gap)} p${dbgTrace.rowPad} f${getComputedStyle(document.documentElement).getPropertyValue("--fs")}]`;
+  }
 }
 
 /* ------------------------------------------------------------------ Nest */
@@ -572,6 +613,13 @@ window.addEventListener("orientationchange", () => setTimeout(fitStage, 300));
 
 fetchData();
 setInterval(fetchData, 60000);
+
+/* Con la tipografia de respaldo los renglones miden distinto y el calendario
+   recortaba un dia en el primer pintado; al terminar de cargar Inter se vuelve
+   a repartir. */
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => { if (state.data) render(); });
+}
 setInterval(applySlot, 1000);
 requestWakeLock();
 // iOS a veces exige un gesto para conceder el wake lock la primera vez.

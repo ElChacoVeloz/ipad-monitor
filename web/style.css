@@ -397,8 +397,10 @@ html, body {
   padding-top: 6px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 16px;
+  /* flex-start y no space-between: el aire sobrante se va a los renglones
+     (--row-extra), no a un hueco entre dos dias. */
+  justify-content: flex-start;
+  gap: 18px;
 }
 
 .day { display: flex; flex-direction: column; }
@@ -437,11 +439,14 @@ html, body {
 
 .event {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 10px;
   min-height: 31px;
-  padding: 3px 0;
+  /* --row-pad lo calcula el JS cuando sobran dias: en vez de un hueco gigante
+     entre dos dias, los renglones respiran. */
+  padding: calc(3px + var(--row-pad, 0px)) 0;
 }
+.event .bar { align-self: stretch; }
 .event .bar {
   flex: 0 0 4px;
   border-radius: 3px;
