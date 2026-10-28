@@ -25,7 +25,7 @@ estándar, sin dependencias) y el iPad solo abre una URL.
   humedad y viento (Open-Meteo, sin API key).
 - **Barra lateral**: amanecer, atardecer, máxima/mínima, humedad, viento y lluvia
   del día.
-- **Próximas 4 horas** con icono, probabilidad de lluvia y temperatura.
+- **Próximas 5 horas** con icono, probabilidad de lluvia y temperatura.
 - **Calendario vertical** a toda la altura de la columna, leyendo los **feeds
   iCal privados** de cada calendario (sin OAuth). La hora va en una píldora con
   el color de su calendario. **Los eventos que ya terminaron salen de la pila**

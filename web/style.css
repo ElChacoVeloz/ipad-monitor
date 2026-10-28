@@ -111,19 +111,19 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 /* ---------------------------------------------- columna izquierda */
 .col-left{width:340px;flex:none;display:flex;flex-direction:column;justify-content:space-between;min-height:0}
 .hourly{display:flex;flex-direction:column;margin:10px 0 0 10px;border-left:5px solid var(--gry);padding-left:14px}
-.hr{display:flex;align-items:center;height:62px;margin-bottom:8px}
+.hr{display:flex;align-items:center;height:52px;margin-bottom:5px}
 .hr:last-child{margin-bottom:0}
 .hr .h{
   width:78px;height:38px;flex:none;background:var(--lav);color:#000;font-size:21px;font-weight:600;
   display:flex;align-items:center;justify-content:flex-end;padding-right:9px;border-radius:19px 0 0 19px;
 }
-.hr .ico{width:44px;height:44px;margin-left:14px;color:var(--pch);flex:none}
+.hr .ico{width:40px;height:40px;margin-left:14px;color:var(--pch);flex:none}
 .hr .ico svg{width:100%;height:100%}
 .hr .rain{margin-left:10px;font-size:19px;color:var(--cyn);width:58px;letter-spacing:.03em}
-.hr .t{margin-left:auto;font-size:52px;font-weight:300;color:var(--ink);line-height:1}
+.hr .t{margin-left:auto;font-size:46px;font-weight:300;color:var(--ink);line-height:1}
 .hr .t i{font-style:normal;font-size:22px;color:var(--muted);vertical-align:top}
 
-.slot{position:relative;height:236px;flex:none;margin-top:14px}
+.slot{position:relative;height:226px;flex:none;margin-top:12px}
 .slot-view{position:absolute;top:0;left:0;right:0;bottom:0;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column}
 .slot-view.on{opacity:1}
 .a-col{background:var(--lav)}
