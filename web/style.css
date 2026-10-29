@@ -178,7 +178,9 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
   flex:1;min-width:0;margin-left:14px;font-size:23px;color:var(--ink);letter-spacing:.03em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:33px;
 }
-.event .cal-tag{flex:none;margin-left:12px;font-size:16px;letter-spacing:.08em;white-space:nowrap;max-width:150px;overflow:hidden}
+.event .cal-tag{flex:none;margin-left:12px;font-size:16px;letter-spacing:.08em;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.event .cal-tag .tag-sep{color:var(--dim)}
+.event.dual .when{padding-right:22px}
 .cal-empty{font-size:26px;color:var(--muted);padding:20px 0}
 
 /* ------------------------------------------------------------ abajo */

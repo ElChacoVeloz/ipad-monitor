@@ -31,6 +31,10 @@ estándar, sin dependencias) y el iPad solo abre una URL.
   el color de su calendario. **Los eventos que ya terminaron salen de la pila**
   (el encabezado del día dice `N DONE`), el que está en curso queda arriba con
   `· NOW`, y el espacio que se libera lo ocupa el **avance del día siguiente**.
+  **Un evento que está en dos calendarios sale una sola vez**: misma hora y mismo
+  título (sin importar mayúsculas) = el mismo evento, con la píldora en dos
+  colores y las dos etiquetas (`HOME · WORK`). Se fusiona antes de medir, así
+  que no gasta renglones dobles.
 - **Termostato Nest** por Google Device Access (SDM): ambiente, set point,
   humedad, modo y estado.
 - **Pie de estado**: una píldora por fuente (`WX`, `CAL`, `NEST`, `NWS`) que pasa a

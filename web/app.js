@@ -254,17 +254,56 @@ function eventLive(ev, now) {
   return !Number.isNaN(a) && !Number.isNaN(b) && a <= now && now < b;
 }
 
+/* El Capitan da de alta ciertas citas en dos calendarios a proposito (la suya y
+   la de la casa). En pantalla van UNA sola vez: misma hora + mismo titulo = el
+   mismo evento, con los colores de los dos calendarios. La llave nunca es el UID
+   (cada feed trae el suyo) y los hex no se promedian (amarillo + azul = oliva). */
+function mergeDuplicateEvents(evs) {
+  const out = [];
+  const seen = new Map();
+  for (const ev of evs) {
+    const key = [ev.allDay ? "1" : "0", ev.start || "", ev.end || "",
+                 String(ev.title || "").trim().toLowerCase()].join("|");
+    const prev = seen.get(key);
+    if (!prev) {
+      const merged = Object.assign({}, ev, {
+        colors: ev.color ? [ev.color] : [],
+        cals: ev.calendar ? [{ name: ev.calendar, color: ev.color }] : [],
+      });
+      seen.set(key, merged);
+      out.push(merged);
+    } else {
+      if (ev.color && prev.colors.indexOf(ev.color) < 0) prev.colors.push(ev.color);
+      if (ev.calendar && !prev.cals.some((c) => c.name === ev.calendar)) {
+        prev.cals.push({ name: ev.calendar, color: ev.color });
+      }
+      if (!prev.location && ev.location) prev.location = ev.location;
+    }
+  }
+  return out;
+}
+
 function eventRow(ev) {
   const row = document.createElement("div");
-  row.className = "event" + (eventLive(ev, calNow()) ? " live" : "");
+  const cols = ev.colors && ev.colors.length ? ev.colors : [ev.color];
+  const dual = cols.length > 1;
+  row.className = "event" + (eventLive(ev, calNow()) ? " live" : "") + (dual ? " dual" : "");
   let when = "All day";
   if (!ev.allDay && ev.start) {
     const d = new Date(ev.start);
     if (!Number.isNaN(d.getTime())) when = fmt({ hour: "numeric", minute: "2-digit" }, d);
   }
-  row.innerHTML = `<div class="when" style="background:${tagColor(ev.color)}">${escapeHtml(when)}</div>
+  /* pildora bicolor: el primer calendario de fondo y el segundo como banda en el
+     remate derecho; las etiquetas de los dos, cada una con su color */
+  const pill = dual
+    ? `background:${tagColor(cols[0])};box-shadow:inset -14px 0 0 ${tagColor(cols[1])}`
+    : `background:${tagColor(cols[0])}`;
+  const cals = ev.cals && ev.cals.length ? ev.cals : [{ name: ev.calendar || "", color: ev.color }];
+  const tags = cals.map((c) => `<span style="color:${tagColor(c.color)}">${escapeHtml(c.name)}</span>`)
+    .join('<span class="tag-sep"> · </span>');
+  row.innerHTML = `<div class="when" style="${pill}">${escapeHtml(when)}</div>
     <div class="what">${escapeHtml(ev.title)}</div>
-    <div class="cal-tag" style="color:${tagColor(ev.color)}">${escapeHtml(ev.calendar || "")}</div>`;
+    <div class="cal-tag">${tags}</div>`;
   return row;
 }
 
@@ -288,8 +327,9 @@ function renderCalendar(cal) {
 
   const now = calNow();
   const days = (cal.days || []).map((d) => {
-    const events = (d.events || []).filter((ev) => !eventEnded(ev, now));
-    return Object.assign({}, d, { events, done: (d.events || []).length - events.length });
+    const all = mergeDuplicateEvents(d.events || []);   // antes de contar y de medir
+    const events = all.filter((ev) => !eventEnded(ev, now));
+    return Object.assign({}, d, { events, done: all.length - events.length });
   });
 
   /* Nada de scroll ni recorte silencioso. Con muchos calendarios (los 5 de la
