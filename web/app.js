@@ -83,9 +83,12 @@ const ICONS = {
   showers: `${CLOUD}<path d="M7.8 19.9l-1.5 3.1M11.4 19.9l-1.5 3.1M15 19.9l-1.5 3.1M18.2 19.9l-1 2"/>`,
   sleet: `${CLOUD}<path d="M8.6 20l-1 2.9M12 20v3M15.4 20l1 2.9"/>`,
   snow: `${CLOUD}<path d="M8.2 20.6v2.6M7 21.9h2.4M15.8 20.6v2.6M14.6 21.9h2.4"/>`,
-  thunder: `${CLOUD}<path d="M13.2 19.2l-3 4.2h3l-1.6 3"/>`,
+  thunder: `${CLOUD}<path d="M13.6 19l-2.7 2.4h2.1l-1.5 1.2"/>`,
   "night-clear": `<path d="M20.4 14.6A8.6 8.6 0 1 1 9.6 3.8a6.7 6.7 0 0 0 10.8 10.8z"/>`,
-  "night-partly": `<path d="M15.6 3.9a5.6 5.6 0 0 0-2 9.1 3.7 3.7 0 0 0-.4-.1 5.3 5.3 0 0 0-10 1.1 4 4 0 0 0 .3 8.5h9.4a3.7 3.7 0 0 0 .4-7.4 5.6 5.6 0 0 0 2.3-11.2z"/>`,
+  /* La luna + nube se dibujo desplazada a la izquierda: su punto mas lejano
+     caia en x=-0.9 y el viewport del SVG la recortaba en seco. Va dentro de
+     un <g> corrido 2 unidades para que quepa completa. */
+  "night-partly": `<g transform="translate(2 0)"><path d="M15.6 3.9a5.6 5.6 0 0 0-2 9.1 3.7 3.7 0 0 0-.4-.1 5.3 5.3 0 0 0-10 1.1 4 4 0 0 0 .3 8.5h9.4a3.7 3.7 0 0 0 .4-7.4 5.6 5.6 0 0 0 2.3-11.2z"/></g>`,
   alert: `<path d="M12 3.4 21 19.9H3z"/><path d="M12 9.4v4.3"/><circle cx="12" cy="16.9" r="0.7" fill="currentColor" stroke="none"/>`,
   check: `<circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.3l2.6 2.6 5-5.4"/>`,
   drop: `<path d="M12 3.6c0 0 4.2 5.4 4.2 8.3a4.2 4.2 0 0 1-8.4 0C7.8 9 12 3.6 12 3.6z"/>`,
