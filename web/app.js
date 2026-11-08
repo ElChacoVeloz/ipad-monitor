@@ -69,26 +69,38 @@ const SUN_RAYS = `
 
 const CLOUD = `<path d="M7.2 18.4h9.4a3.7 3.7 0 0 0 .4-7.4 5.3 5.3 0 0 0-10.1-1.1 4 4 0 0 0 .3 8.5z"/>`;
 
+/* Con lluvia/nieve la nube sube 1.2: asi las gotas caben completas dentro del
+   viewBox (antes la nieve se salia por abajo) y no se pegan a la nube. */
+const CLOUD_UP = `<g transform="translate(0 -1.2)">${CLOUD}</g>`;
+/* Sol o luna asomando: nube mas chica abajo a la derecha (mismas curvas a
+   0.84, con el trazo del mismo grueso) y el astro se dibuja solo en la parte
+   que queda fuera de ella (arcos calculados con 2.4 de hueco), en vez de un
+   circulo completo que se cruzaba con el contorno de la nube. */
+const CLOUD_SMALL = `<path d="M10.4 21.2h7.9a3.11 3.11 0 0 0 .34-6.22 4.45 4.45 0 0 0-8.48-.92 3.36 3.36 0 0 0 .25 7.14z"/>`;
+
 const ICONS = {
   clear: `<circle cx="12" cy="12" r="4.15"/>${SUN_RAYS}`,
   "mostly-clear": `<circle cx="12" cy="11.4" r="4.4"/>
     <path d="M12 2.5v2M3.4 12h2M5.9 5.9l1.4 1.4M18.1 5.9l-1.4 1.4M19.1 12h1.4"/>`,
-  "partly-cloudy": `<circle cx="8.6" cy="7.9" r="3"/>
-    <path d="M8.6 2.6v1.6M3.3 7.9h1.6M4.9 4.2l1.1 1.1M12.3 4.2l-1.1 1.1"/>
-    ${CLOUD}`,
+  "partly-cloudy": `<path d="M8.77 11.68A3.3 3.3 0 1 1 11.51 9.5"/>
+    <path d="M8.4 2v1.6M2 8.4h1.6M3.87 3.87l1.14 1.14M12.93 3.87l-1.14 1.14M3.87 12.93l1.14-1.14M14.8 8.4h-1.6"/>
+    ${CLOUD_SMALL}`,
   cloudy: `${CLOUD}`,
-  fog: `${CLOUD}<path d="M6.6 20.4h10.8M8.4 22.3h7.2"/>`,
-  drizzle: `${CLOUD}<path d="M8.6 20.2l-.6 1.7M12 20.2l-.6 1.7M15.4 20.2l-.6 1.7"/>`,
-  rain: `${CLOUD}<path d="M8.4 19.8l-1.1 3M12 19.8l-1.1 3M15.6 19.8l-1.1 3"/>`,
-  showers: `${CLOUD}<path d="M7.8 19.9l-1.5 3.1M11.4 19.9l-1.5 3.1M15 19.9l-1.5 3.1M18.2 19.9l-1 2"/>`,
-  sleet: `${CLOUD}<path d="M8.6 20l-1 2.9M12 20v3M15.4 20l1 2.9"/>`,
-  snow: `${CLOUD}<path d="M8.2 20.6v2.6M7 21.9h2.4M15.8 20.6v2.6M14.6 21.9h2.4"/>`,
-  thunder: `${CLOUD}<path d="M13.6 19l-2.7 2.4h2.1l-1.5 1.2"/>`,
+  fog: `${CLOUD_UP}<path d="M6.6 19.8h10.8M8.4 21.9h7.2"/>`,
+  drizzle: `${CLOUD_UP}<path d="M8.6 20l-.7 1.9M12 20l-.7 1.9M15.4 20l-.7 1.9"/>`,
+  rain: `${CLOUD_UP}<path d="M8.4 19.7l-1.1 3M12 19.7l-1.1 3M15.6 19.7l-1.1 3"/>`,
+  showers: `${CLOUD_UP}<path d="M7.8 19.7l-1.4 3M11.4 19.7l-1.4 3M15 19.7l-1.4 3M18.4 19.7l-.9 1.9"/>`,
+  sleet: `${CLOUD_UP}<path d="M8.6 19.8l-1 2.8M12 19.8v2.8M15.4 19.8l1 2.8"/>`,
+  snow: `${CLOUD_UP}<path d="M8.2 20v2.4M7 21.2h2.4M15.8 20v2.4M14.6 21.2h2.4"/>`,
+  /* El rayo cruza la nube por una abertura en el borde de abajo: chiquito y
+     colgado debajo no se leia a 40 px. */
+  thunder: `<g transform="translate(0 -1.2)"><path d="M16.4 18.4h.2a3.7 3.7 0 0 0 .4-7.4 5.3 5.3 0 0 0-10.1-1.1 4 4 0 0 0 .3 8.5h.8"/></g>
+    <path d="M13.6 11.4 10.6 17.2h3.3l-2.7 5"/>`,
   "night-clear": `<path d="M20.4 14.6A8.6 8.6 0 1 1 9.6 3.8a6.7 6.7 0 0 0 10.8 10.8z"/>`,
-  /* La luna + nube se dibujo desplazada a la izquierda: su punto mas lejano
-     caia en x=-0.9 y el viewport del SVG la recortaba en seco. Va dentro de
-     un <g> corrido 2 unidades para que quepa completa. */
-  "night-partly": `<g transform="translate(2 0)"><path d="M15.6 3.9a5.6 5.6 0 0 0-2 9.1 3.7 3.7 0 0 0-.4-.1 5.3 5.3 0 0 0-10 1.1 4 4 0 0 0 .3 8.5h9.4a3.7 3.7 0 0 0 .4-7.4 5.6 5.6 0 0 0 2.3-11.2z"/></g>`,
+  /* Luna creciente detras de la nube, con la misma composicion que el sol de
+     partly-cloudy. La version anterior era un solo trazo que dibujaba una
+     hoja en vez de una luna y llegaba hasta el borde izquierdo. */
+  "night-partly": `<path d="M6.08 13.35A5.2 5.2 0 0 1 8.37 3.6M9.78 10.6A4.4 4.4 0 0 1 8.36 3.63"/>${CLOUD_SMALL}`,
   alert: `<path d="M12 3.4 21 19.9H3z"/><path d="M12 9.4v4.3"/><circle cx="12" cy="16.9" r="0.7" fill="currentColor" stroke="none"/>`,
   check: `<circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.3l2.6 2.6 5-5.4"/>`,
   drop: `<path d="M12 3.6c0 0 4.2 5.4 4.2 8.3a4.2 4.2 0 0 1-8.4 0C7.8 9 12 3.6 12 3.6z"/>`,
@@ -196,7 +208,7 @@ function sideBlocks(wx) {
     `<div class="blk ${c}">${k ? `<span class="k">${escapeHtml(k)}</span>` : ""}${
       v ? `<span class="v">${escapeHtml(v)}</span>` : ""}</div>`).join("");
   const gry = side.querySelector(".blk.s-gry:not(.grow)");
-  if (gry) gry.style.color = "#c4c8d8";
+  if (gry) gry.style.color = "#e6e8f0";   // = --chip: legible sobre el gris
 }
 
 function renderWeather(wx) {
@@ -205,10 +217,12 @@ function renderWeather(wx) {
   if (!wx) {
     $("#tempNow").textContent = "--";
     $("#iconNow").innerHTML = "";
-    $("#feelsLike").textContent = "Weather unavailable";
-    $("#descNow").textContent = (src && src.error) || "no data from Open-Meteo";
+    // titulo corto arriba y la causa abajo (recortada con elipsis): el error
+    // largo en la linea fuerte se salia de la pantalla por la derecha
+    $("#descNow").textContent = "Weather unavailable";
+    $("#feelsLike").textContent = (src && src.error) || "no data from Open-Meteo";
     $("#hiLo").textContent = "";
-    $("#hourly").innerHTML = "";
+    $("#hourly").innerHTML = `<div class="hr-empty">No forecast right now</div>`;
     return;
   }
   const cur = wx.current || {};
@@ -365,6 +379,13 @@ function renderCalendar(cal) {
         chip.className = "day-done";
         chip.textContent = `${day.done} done`;
         dEl.querySelector(".day-head").insertBefore(chip, dEl.querySelector(".day-rule"));
+      } else if (!(day.events || []).length) {
+        // dia libre: se dice en el encabezado (sin alto extra), si no la
+        // semana vacia se ve como una tarjeta que no termino de cargar
+        const free = document.createElement("span");
+        free.className = "day-free";
+        free.textContent = "No events";
+        dEl.querySelector(".day-head").insertBefore(free, dEl.querySelector(".day-rule"));
       }
       for (const ev of day.events || []) dEl.appendChild(eventRow(ev));
       if (!(day.events || []).length && day.done > 0) {
@@ -485,7 +506,9 @@ function renderCalendar(cal) {
   if (shownDates.length) {
     const a = new Date(`${shownDates[0]}T12:00:00`);
     const b = new Date(`${shownDates[shownDates.length - 1]}T12:00:00`);
-    head.push(`${fmt({ month: "short", day: "numeric" }, a)} – ${fmt({ month: "short", day: "numeric" }, b)}`);
+    const da = fmt({ month: "short", day: "numeric" }, a);
+    const db = fmt({ month: "short", day: "numeric" }, b);
+    head.push(da === db ? da : `${da} – ${db}`);   // un solo dia: "Nov 7", no "Nov 7 – Nov 7"
   }
   if (cal.errors && cal.errors.length) {
     head.push(`${cal.errors.length} feed${cal.errors.length > 1 ? "s" : ""} down`);
@@ -512,7 +535,7 @@ function renderNest(nest) {
   const src = state.data && state.data.sources ? state.data.sources.nest : null;
   if (!nest) {
     $("#nestAmbient").textContent = "--";
-    $("#nestTarget").textContent = "—";
+    $("#nestTarget").textContent = "--";
     $("#nestHumidity").textContent = "—";
     $("#nestMode").textContent = "—";
     const st = $("#nestStatus");
@@ -521,8 +544,10 @@ function renderNest(nest) {
     $("#nestCard").classList.add("err-state");
     return;
   }
+  $("#nestCard").classList.remove("err-state");
   $("#nestAmbient").textContent = nest.ambientC != null ? Math.round(nest.ambientC) : "--";
-  $("#nestTarget").textContent = nest.targetC != null ? `${Math.round(nest.targetC)}°` : "—";
+  // mismo grado chico que INSIDE (antes el de SET TO salia del tamano del numero)
+  $("#nestTarget").innerHTML = nest.targetC != null ? `${Math.round(nest.targetC)}<i>°</i>` : "--";
   $("#nestHumidity").textContent = nest.humidity != null ? `${Math.round(nest.humidity)}%` : "—";
   const modeMap = { COOL: "Cool", HEAT: "Heat", HEATCOOL: "Auto", OFF: "Off", ECO: "Eco" };
   $("#nestMode").textContent = modeMap[nest.mode] || nest.mode || "—";
@@ -598,7 +623,26 @@ function render() {
   renderNest(d.nest);
   applySlot();
   ensureFit();       // la columna izquierda primero: puede cambiar el alto
+  fitAlert();
   renderCalendar(d.calendar);
+}
+
+/* La alerta vive en una tarjeta de alto fijo: con un titular largo del NWS el
+   "Expires ..." se salia por abajo, encima del pie, y los puntos del slot se
+   montaban sobre el texto. Se quitan renglones del cuerpo (4 -> 1) hasta que
+   todo quepa arriba de los puntos. */
+function fitAlert() {
+  const card = $("#alertCard");
+  const text = $("#alertText");
+  const col = card.querySelector(".alert-body > div:last-child");   // la columna de texto, no el icono
+  if (!col) return;
+  const s = $("#stage").getBoundingClientRect().width / 1280 || 1;
+  const limit = () => card.getBoundingClientRect().bottom - 16 * s;   // aire para los puntos
+  for (let lines = 4; lines >= 1; lines--) {
+    text.style.webkitLineClamp = String(lines);
+    text.style.lineClamp = String(lines);
+    if (col.getBoundingClientRect().bottom <= limit()) return;
+  }
 }
 
 /* --------------------------------------------------------------- fondos */

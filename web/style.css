@@ -9,6 +9,8 @@
   --gry:#535970; --lav:#8d93ad; --lt:#c4c8d8;
   --org:#ee4a2a; --sal:#ff8a66; --pch:#ffb98e; --cyn:#2ca9df; --amb:#ffa21f;
   --ink:#ffd9bf; --muted:#a9aec4; --dim:#6f7590; --track:#14171f;
+  /* texto sobre chips grises: --lt ahi daba 4.2:1, este da 5.7:1 */
+  --chip:#e6e8f0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#000;overflow:hidden}
@@ -59,15 +61,16 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .top-content{flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px 12px 18px}
 .clock{font-size:118px;font-weight:300;line-height:.86;color:var(--pch);letter-spacing:.01em;white-space:nowrap}
 .clock .ampm{font-size:38px;font-weight:500;color:var(--sal);margin-left:10px;letter-spacing:.04em}
-.date{margin-top:8px;font-size:25px;color:var(--lt);letter-spacing:.07em}
+.clock-block{flex:none}
+.date{margin-top:8px;font-size:25px;color:var(--lt);letter-spacing:.07em;white-space:nowrap}
 
-.now{display:flex;align-items:center;align-self:center}
+.now{display:flex;align-items:center;align-self:center;min-width:0;margin-left:24px}
 .now-icon{width:78px;height:78px;color:var(--pch);margin-right:12px}
 .now-icon svg{width:100%;height:100%}
-.now-temp{font-size:104px;font-weight:300;line-height:.84;color:var(--cyn)}
+.now-temp{font-size:104px;font-weight:300;line-height:.84;color:var(--cyn);white-space:nowrap}
 .now-temp i{font-style:normal;font-size:34px;color:var(--muted);margin-left:4px;vertical-align:top;position:relative;top:6px}
-.now-meta{margin-left:18px;padding-bottom:2px;min-width:170px}
-.now-meta .m{font-size:21px;color:var(--lt);letter-spacing:.05em;line-height:1.25;white-space:nowrap}
+.now-meta{margin-left:18px;padding-bottom:2px;min-width:170px;max-width:300px}
+.now-meta .m{font-size:21px;color:var(--lt);letter-spacing:.05em;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .now-meta .strong{font-size:27px;color:var(--ink);font-weight:500}
 .now-meta .dim{color:var(--muted)}
 
@@ -99,9 +102,9 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .ph-name{padding:0 12px 0 4px;font-size:24px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
 .ph-fill{flex:1;background:var(--gry);min-width:6px}
 .ph-end{width:18px;border-radius:0 20px 20px 0}
-.ph-badge{background:var(--gry);color:var(--lt) !important;padding:0 10px;font-size:18px;letter-spacing:.06em;white-space:nowrap}
+.ph-badge{background:var(--gry);color:var(--chip) !important;padding:0 10px;font-size:18px;letter-spacing:.06em;white-space:nowrap}
 .ph-badge.on{background:var(--cyn);color:#000 !important}
-.ph-range{background:var(--gry);color:var(--lt) !important;padding:0 12px;font-size:18px;letter-spacing:.05em;white-space:nowrap}
+.ph-range{background:var(--gry);color:var(--chip) !important;padding:0 12px;font-size:18px;letter-spacing:.05em;white-space:nowrap}
 .ph-range.warn{background:var(--amb);color:#000 !important}
 .pill-head.big{height:44px}
 .pill-head.big .ph-cap{border-radius:22px 0 0 22px}
@@ -122,6 +125,7 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .hr .rain{margin-left:10px;font-size:19px;color:var(--cyn);width:58px;letter-spacing:.03em}
 .hr .t{margin-left:auto;font-size:46px;font-weight:300;color:var(--ink);line-height:1}
 .hr .t i{font-style:normal;font-size:22px;color:var(--muted);vertical-align:top}
+.hr-empty{font-size:21px;color:var(--muted);letter-spacing:.06em;padding:14px 0}
 
 .slot{position:relative;height:226px;flex:none;margin-top:12px}
 .slot-view{position:absolute;top:0;left:0;right:0;bottom:0;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column}
@@ -145,9 +149,10 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .nv{font-size:82px;font-weight:300;line-height:.95;color:var(--pch)}
 .nv i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:top}
 .nv.set{color:var(--cyn)}
+.err-state .nv i{display:none}   /* sin lectura: "--" sin grado colgando */
 .nest-meta{width:100%;display:flex;margin-top:10px}
 .nest-meta > div{display:flex;align-items:center;margin-right:16px}
-.nest-meta .nk{background:var(--gry);color:var(--lt);padding:2px 8px;margin-right:8px;font-size:15px}
+.nest-meta .nk{background:var(--gry);color:var(--chip);padding:2px 8px;margin-right:8px;font-size:15px}
 .nest-meta b{font-size:22px;font-weight:500;color:var(--ink)}
 .slot-dots{position:absolute;right:4px;bottom:2px;display:flex}
 .slot-dots i{width:22px;height:8px;background:var(--gry);margin-left:5px}
@@ -196,7 +201,7 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .src b{height:100%;display:flex;align-items:center;padding:0 10px;font-size:16px;font-weight:600;color:#000;background:var(--cyn);letter-spacing:.05em}
 .src.stale b{background:var(--amb)}
 .src.bad b{background:var(--org)}
-.src span{height:100%;display:flex;align-items:center;padding:0 8px;font-size:15px;color:var(--lt);background:var(--gry);margin-left:3px}
+.src span{height:100%;display:flex;align-items:center;padding:0 8px;font-size:15px;color:var(--chip);background:var(--gry);margin-left:3px}
 
 /* ---------------------------------------------- pantallas bajas (16:9) */
 .compact .top{height:140px} .compact .e-top{height:140px;border-bottom-left-radius:70px}
@@ -208,7 +213,8 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .compact .alert-title{font-size:25px}
 
 /* eventos: los terminados salen de la pila; el que esta en curso se marca */
-.day-done{margin-left:10px;background:var(--gry);color:var(--lt);padding:1px 8px;font-size:16px;letter-spacing:.06em}
+.day-done{margin-left:10px;background:var(--gry);color:var(--chip);padding:1px 8px;font-size:16px;letter-spacing:.06em}
+.day-free{margin-left:12px;font-size:17px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
 .day-clear{font-size:21px;color:var(--muted);letter-spacing:.06em;padding:4px 0 2px 114px}
 .event.live .when{animation:liveblink 2s steps(2,start) infinite}
 .event.live .what{color:#fff}
