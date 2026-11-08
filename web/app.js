@@ -106,6 +106,22 @@ const ICONS = {
   drop: `<path d="M12 3.6c0 0 4.2 5.4 4.2 8.3a4.2 4.2 0 0 1-8.4 0C7.8 9 12 3.6 12 3.6z"/>`,
 };
 
+/* Centro optico: cada dibujo tiene su tinta en otra altura del viewBox (la
+   nube con lluvia cae ~2 abajo, el sol de mostly-clear ~3 arriba). Se corre
+   cada uno para que el centro de su tinta quede en y=12 y asi un solo ajuste
+   en .now-icon lo alinea con los digitos. Valores medidos pintando cada
+   icono a 192 px (getImageData), trazo incluido. */
+const ICON_DY = {
+  "night-clear": -0.19, "mostly-clear": 2.87, "partly-cloudy": 0.37, "night-partly": -0.44,
+  cloudy: -0.5, fog: -1.69, drizzle: -1.69, rain: -2.13, showers: -2.13, sleet: -2.06,
+  snow: -1.94, thunder: -1.88, alert: 0.38, drop: 2.12,
+};
+
+function iconBody(key) {
+  const dy = ICON_DY[key];
+  return dy ? `<g transform="translate(0 ${dy})">${ICONS[key]}</g>` : ICONS[key];
+}
+
 function icon(name, isDay, cls) {
   let key = name || "cloudy";
   if (!isDay) {
@@ -114,12 +130,12 @@ function icon(name, isDay, cls) {
   }
   if (!ICONS[key]) key = "cloudy";
   return `<svg class="${cls || ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${ICONS[key]}</svg>`;
+    stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">${iconBody(key)}</svg>`;
 }
 
 function alertIcon(kind) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35"
-    stroke-linecap="round" stroke-linejoin="round">${ICONS[kind] || ICONS.alert}</svg>`;
+    stroke-linecap="round" stroke-linejoin="round">${iconBody(ICONS[kind] ? kind : "alert")}</svg>`;
 }
 
 /* ------------------------------------------------------------------ reloj */
@@ -271,6 +287,14 @@ function eventLive(ev, now) {
   return !Number.isNaN(a) && !Number.isNaN(b) && a <= now && now < b;
 }
 
+/* Dia de "hoy" para el calendario: el del payload (zona del servidor) o, con
+   ?now=AAAA-MM-DDTHH:MM, el dia de esa fecha simulada (QA). */
+function calToday() {
+  const q = new URLSearchParams(location.search).get("now");
+  if (q && /^\d{4}-\d{2}-\d{2}/.test(q) && !Number.isNaN(new Date(q).getTime())) return q.slice(0, 10);
+  return (state.data && state.data.today) || "";
+}
+
 /* El Capitan da de alta ciertas citas en dos calendarios a proposito (la suya y
    la de la casa). En pantalla van UNA sola vez: misma hora + mismo titulo = el
    mismo evento, con los colores de los dos calendarios. La llave nunca es el UID
@@ -300,11 +324,17 @@ function mergeDuplicateEvents(evs) {
   return out;
 }
 
-function eventRow(ev) {
+function eventRow(ev, dayDate) {
   const row = document.createElement("div");
   const cols = ev.colors && ev.colors.length ? ev.colors : [ev.color];
   const dual = cols.length > 1;
-  row.className = "event" + (eventLive(ev, calNow()) ? " live" : "") + (dual ? " dual" : "");
+  /* Un "All day" de hoy late igual que un evento en curso, pero con su propia
+     clase: .live pondria el titulo en blanco y el " · NOW". Se decide por el
+     dia del grupo (un evento de varios dias viene repetido en cada dia y solo
+     late en el de hoy). */
+  const allDayLive = !!ev.allDay && !!dayDate && dayDate === calToday();
+  row.className = "event" + (eventLive(ev, calNow()) ? " live" : "") + (allDayLive ? " allday-live" : "") +
+    (dual ? " dual" : "");
   let when = "All day";
   if (!ev.allDay && ev.start) {
     const d = new Date(ev.start);
@@ -353,7 +383,7 @@ function renderCalendar(cal) {
      oficina) el dia se llena: primero se aprieta la densidad, luego se cortan
      eventos por dia con un "+N more", y solo al final se van dias completos.
      Todo lo que se quito se anuncia en el encabezado o en la propia linea. */
-  const todayIso = (state.data && state.data.today) || "";
+  const todayIso = calToday();   // = state.data.today salvo con ?now= (QA)
   const fits = () => body.scrollHeight <= body.clientHeight + 1;
 
   /* Regla del Capitan: primero completo, despues cantidad. Se pinta todo a
@@ -387,7 +417,7 @@ function renderCalendar(cal) {
         free.textContent = "No events";
         dEl.querySelector(".day-head").insertBefore(free, dEl.querySelector(".day-rule"));
       }
-      for (const ev of day.events || []) dEl.appendChild(eventRow(ev));
+      for (const ev of day.events || []) dEl.appendChild(eventRow(ev, day.date));
       if (!(day.events || []).length && day.done > 0) {
         const none = document.createElement("div");
         none.className = "day-clear";

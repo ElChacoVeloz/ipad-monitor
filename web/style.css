@@ -58,14 +58,21 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .e-top .ecode{top:10px}
 .e-top .ecode2{top:32px;opacity:.75}
 .top-body{flex:1;display:flex;flex-direction:column;margin-left:5px;min-width:0}
-.top-content{flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px 12px 18px}
+.top-content{flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px 8px 18px;min-height:0}
 .clock{font-size:118px;font-weight:300;line-height:.86;color:var(--pch);letter-spacing:.01em;white-space:nowrap}
-.clock .ampm{font-size:38px;font-weight:500;color:var(--sal);margin-left:10px;letter-spacing:.04em}
+/* line-height 0: el AM/PM no debe inflar la linea del reloj (sumaba ~6 px y
+   empujaba la barra del header encima de la del cuerpo) */
+.clock .ampm{font-size:38px;font-weight:500;color:var(--sal);margin-left:10px;letter-spacing:.04em;line-height:0}
 .clock-block{flex:none}
 .date{margin-top:8px;font-size:25px;color:var(--lt);letter-spacing:.07em;white-space:nowrap}
 
 .now{display:flex;align-items:center;align-self:center;min-width:0;margin-left:24px}
-.now-icon{width:78px;height:78px;color:var(--pch);margin-right:12px}
+.now-icon{width:78px;height:78px;color:var(--pch);margin-right:12px;transform:translateY(7.4px)}
+/* translateY y no margin-top: con align-items:center el margen se reparte y
+   solo baja la mitad. 7.4 = lo que el ink de los digitos (104 px) cae por
+   debajo del centro de su caja; los iconos ya traen su tinta centrada
+   (ICON_DY en app.js). Medido en pixeles. */
+.compact .now-icon{transform:translateY(5.9px)}
 .now-icon svg{width:100%;height:100%}
 .now-temp{font-size:104px;font-weight:300;line-height:.84;color:var(--cyn);white-space:nowrap}
 .now-temp i{font-style:normal;font-size:34px;color:var(--muted);margin-left:4px;vertical-align:top;position:relative;top:6px}
@@ -205,7 +212,9 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 
 /* ---------------------------------------------- pantallas bajas (16:9) */
 .compact .top{height:140px} .compact .e-top{height:140px;border-bottom-left-radius:70px}
-.compact .clock{font-size:96px} .compact .now-temp{font-size:86px}
+/* reloj a 86 = la temperatura compacta: asi reloj + fecha + barra caben en
+   los 140 del header sin quitarle alto al calendario */
+.compact .clock{font-size:86px} .compact .now-temp{font-size:86px}
 .compact .hr{height:46px;margin-bottom:4px}
 .compact .hr .t{font-size:40px}
 .compact .slot{height:196px;margin-top:8px}
@@ -217,6 +226,8 @@ html.booting *,html.booting *::before,html.booting *::after{transition:none !imp
 .day-free{margin-left:12px;font-size:17px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
 .day-clear{font-size:21px;color:var(--muted);letter-spacing:.06em;padding:4px 0 2px 114px}
 .event.live .when{animation:liveblink 2s steps(2,start) infinite}
+/* todo el dia, hoy: solo la pildora late (mismo ritmo); sin blanco ni "· NOW" */
+.event.allday-live .when{animation:liveblink 2s steps(2,start) infinite}
 .event.live .what{color:#fff}
 .event.live .what::after{content:"  · NOW";color:var(--cyn);font-size:18px;letter-spacing:.08em}
 @keyframes liveblink{to{opacity:.45}}
